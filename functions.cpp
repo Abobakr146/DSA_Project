@@ -237,7 +237,6 @@ string decompress(const string& xml) {
     stringstream ss(xml);
 
     // 2. Read Dictionary Size
-    // Use 'size_t' to be safer across different writers
     size_t  dict_size; 
     ss.read(reinterpret_cast<char*>(&dict_size), sizeof(dict_size));
 
@@ -261,7 +260,6 @@ string decompress(const string& xml) {
 
     // 4. Read Compressed Byte Data
     //  read directly from the current position to the end
-    // This removes the need for 'stringToBytes' and 'substr' which can be slow/buggy
     streampos data_start = ss.tellg();
     
     // Read the rest of the stream into a vector directly
