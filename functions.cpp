@@ -228,7 +228,8 @@ string decompress(const string& xml) {
     // 1. Basic Validation
     if (xml.empty()) {
          cerr << "Error: Empty input for decompression" << endl;
-        return "";}
+        return "";
+    }
 
     stringstream ss(xml);
 
