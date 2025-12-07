@@ -2,6 +2,7 @@
 #include <stack>
 #include <sstream>
 #include <cstring>
+#include <functional>
 
 using namespace std;
 
