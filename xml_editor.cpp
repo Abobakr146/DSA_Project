@@ -1,13 +1,14 @@
 #include "functions.h"
-
+#include "utils.h"
 
 int main(int argc, char* argv[]) {
     string input_path;
     string output_path;
     string xml_content;
     string operation;
-    bool fix;
+    bool fix = false;
     
+    // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
 
@@ -19,7 +20,7 @@ int main(int argc, char* argv[]) {
             output_path = argv[i + 1];
             i++; 
         }
-        else if (arg == "-f" && i + 1 < argc) {
+        else if (arg == "-f") {
             fix = true;
         }
         else if (i == 1) {
@@ -27,15 +28,13 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // --- 2. Validation and Execution ---
-    
+    // Validate input
     if (input_path.empty()) {
         cerr << "Usage: " << argv[0] << " <order> -i <path/to/input.xml> [-o <path/to/output.xml>]" << endl;
         cerr << "Error: Input file path (-i) is missing." << endl;
         return 1;
     }
     
-    // Inform the user what operation is being simulated
     cout << "Simulating XML Editor with operation: '" << operation << "'" << endl;
     if (operation == "verify") {
         if (fix)
@@ -46,38 +45,52 @@ int main(int argc, char* argv[]) {
     
     cout << "Attempting to read XML file: " << input_path << endl;
 
-    // --- 3. Call the extraction function ---
-    if (extract_content(input_path, xml_content)) {
-        cout << "\n--- Successfully extracted XML content into 'xml_content' string ---\n" << endl;
-        
+    // Read input file (binary for decompress, text for everything else)
+    bool extractSuccess;
+    if (operation == "decompress") {
+        extractSuccess = extract_binary_content(input_path, xml_content);
     } else {
-        // Error
+        extractSuccess = extract_content(input_path, xml_content);
+    }
+    
+    if (extractSuccess) {
+        cout << "\n--- Successfully extracted XML content into 'xml_content' string ---\n" << endl;
+    } else {
         return 1;
     }
 
+    // Process based on operation
     string updated_xml;
     if(operation == "verify") {
         updated_xml = verify(xml_content);
         if (fix)
             updated_xml = fixation(updated_xml);
     }
-    if(operation == "format") {
+    else if(operation == "format") {
         updated_xml = format(xml_content);
     }
-    if(operation == "json") {
+    else if(operation == "json") {
         updated_xml = json(xml_content);
     }
-    if(operation == "mini") {
+    else if(operation == "mini") {
         updated_xml = mini(xml_content);
     }
-    if(operation == "compress") {
+    else if(operation == "compress") {
         updated_xml = compress(xml_content);
     }
-    if(operation == "decompress") {
+    else if(operation == "decompress") {
         updated_xml = decompress(xml_content);
     }
 
-    if (writeToFile(output_path, xml_content)) {
+    // Write output file (binary for compress, text for everything else)
+    bool writeSuccess;
+    if (operation == "compress") {
+        writeSuccess = writeBinaryToFile(output_path, updated_xml);
+    } else {
+        writeSuccess = writeToFile(output_path, updated_xml);
+    }
+    
+    if (writeSuccess) {
         cout << "File created successfully!\n";
     } else {
         cout << "Failed to create file.\n";
