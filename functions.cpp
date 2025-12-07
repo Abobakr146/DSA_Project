@@ -226,26 +226,29 @@ string compress(const string& xml) {
 
 string decompress(const string& xml) {
     // 1. Basic Validation
-    if (xml.empty()) 
-    {
-         cerr << "Error: Empty input for decompression" << endl;
+    if (xml.empty()) {
+        cerr << "Error: Empty input passed to decompress function!" << endl;
         return "";
     }
+
+    // Print input size to debug "Text Mode" reading issues
+    cout << "Debug: Decompress received " << xml.size() << " bytes." << endl;
 
     stringstream ss(xml);
 
     // 2. Read Dictionary Size
-    size_t dict_size;
+    // Use 'size_t' to be safer across different writers
+    size_t  dict_size; 
     ss.read(reinterpret_cast<char*>(&dict_size), sizeof(dict_size));
-    
+
     if (ss.fail()) {
-        cerr << "Error: Failed to read dictionary size." << endl;
+        cerr << "Error: Failed to read dictionary size. Input too short?" << endl;
         return "";
     }
 
+    cout << "Debug: Dictionary size is " << dict_size << " entries." << endl;
+
     // 3. Reconstruct Dictionary
-    // We use a vector because the keys are implicit. 
-    // Index 0 maps to byte 128, Index 1 maps to 129
     vector<pair<unsigned char, unsigned char>> dict;
     dict.reserve(dict_size);
 
@@ -257,28 +260,27 @@ string decompress(const string& xml) {
     }
 
     // 4. Read Compressed Byte Data
-    // Get the remaining string starting from the current position
-    streampos current_pos = ss.tellg();
-    string remaining_data = xml.substr(current_pos);
+    //  read directly from the current position to the end
+    // This removes the need for 'stringToBytes' and 'substr' which can be slow/buggy
+    streampos data_start = ss.tellg();
     
-    // Use  helper function to convert the string to a byte vector
-    vector<unsigned char> data = stringToBytes(remaining_data);
+    // Read the rest of the stream into a vector directly
+    string remaining_str = xml.substr(data_start);
+    vector<unsigned char> data(remaining_str.begin(), remaining_str.end());
+
+    cout << "Debug: Processing " << data.size() << " bytes of compressed data." << endl;
 
     // 5. Recursive Expansion Logic
     string output;
     
-    // Recursive lambda to handle nested compressions
-    // "128" is the starting offset for BPE replacement symbols
+    // Recursive lambda
     function<void(unsigned char)> expand = [&](unsigned char b) {
         int index = (int)b - 128;
 
-        // Check if 'b' is a replacement symbol (>= 128) AND exists in our dictionary
         if (index >= 0 && index < (int)dict.size()) {
-            // It is a symbol: Recursively expand the pair it represents
             expand(dict[index].first);
             expand(dict[index].second);
         } else {
-            // It is a literal character: Append to output
             output += (char)b;
         }
     };
@@ -288,6 +290,7 @@ string decompress(const string& xml) {
         expand(b);
     }
 
+    cout << "Debug: Decompressed output size is " << output.size() << " bytes." << endl;
     return output;
 }
 
