@@ -224,7 +224,68 @@ string compress(const string& xml) {
 }
 
 string decompress(const string& xml) {
-   return "";
+    // 1. Basic Validation
+    if (xml.empty()) 
+         cerr << "Error: Empty input for decompression" << endl;
+        return "";
+
+    stringstream ss(xml);
+
+    // 2. Read Dictionary Size
+    size_t dict_size;
+    ss.read(reinterpret_cast<char*>(&dict_size), sizeof(dict_size));
+    
+    if (ss.fail()) {
+        cerr << "Error: Failed to read dictionary size." << endl;
+        return "";
+    }
+
+    // 3. Reconstruct Dictionary
+    // We use a vector because the keys are implicit. 
+    // Index 0 maps to byte 128, Index 1 maps to 129
+    vector<pair<unsigned char, unsigned char>> dict;
+    dict.reserve(dict_size);
+
+    for (size_t i = 0; i < dict_size; ++i) {
+        unsigned char first, second;
+        ss.read(reinterpret_cast<char*>(&first), sizeof(first));
+        ss.read(reinterpret_cast<char*>(&second), sizeof(second));
+        dict.push_back({first, second});
+    }
+
+    // 4. Read Compressed Byte Data
+    // Get the remaining string starting from the current position
+    streampos current_pos = ss.tellg();
+    string remaining_data = xml.substr(current_pos);
+    
+    // Use  helper function to convert the string to a byte vector
+    vector<unsigned char> data = stringToBytes(remaining_data);
+
+    // 5. Recursive Expansion Logic
+    string output;
+    
+    // Recursive lambda to handle nested compressions
+    // "128" is the starting offset for BPE replacement symbols
+    function<void(unsigned char)> expand = [&](unsigned char b) {
+        int index = (int)b - 128;
+
+        // Check if 'b' is a replacement symbol (>= 128) AND exists in our dictionary
+        if (index >= 0 && index < (int)dict.size()) {
+            // It is a symbol: Recursively expand the pair it represents
+            expand(dict[index].first);
+            expand(dict[index].second);
+        } else {
+            // It is a literal character: Append to output
+            output += (char)b;
+        }
+    };
+
+    // 6. Generate Decompressed String
+    for (unsigned char b : data) {
+        expand(b);
+    }
+
+    return output;
 }
 
 string draw(const string& xml) {
