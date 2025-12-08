@@ -206,6 +206,11 @@ string format(const string &xml)
     return "";
 }
 
+// Helper to generate indentation spaces based on depth
+string getIndent(int level) {
+    return string(level * 4, ' '); // 4 spaces per level
+}
+
 struct XMLNode
 {
     string name;
@@ -285,20 +290,24 @@ XMLNode *parseXML(const string &xml)
     return root;
 }
 
-void nodeToJSON(XMLNode *node, stringstream &ss)
+void nodeToJSON(XMLNode *node, stringstream &ss, int level)
 {
-    if (!node)
-        return;
+    if (!node) return;
+
+    // Case 1: It's a leaf node (just text content, no children)
     if (node->children.empty())
     {
         ss << "\"" << node->content << "\"";
         return;
     }
 
-    ss << "{";
+    // Case 2: It's an object (has children)
+    ss << "{\n";
+
     map<string, vector<XMLNode *>> groups;
     vector<string> order;
 
+    // Group children by tag name to handle arrays
     for (auto child : node->children)
     {
         if (groups.find(child->name) == groups.end())
@@ -308,49 +317,60 @@ void nodeToJSON(XMLNode *node, stringstream &ss)
         groups[child->name].push_back(child);
     }
 
+    // Iterate through the grouped children
     for (size_t i = 0; i < order.size(); ++i)
     {
         string key = order[i];
         const auto &list = groups[key];
 
-        ss << "\"" << key << "\": ";
+        // Print Indentation + Key
+        ss << getIndent(level + 1) << "\"" << key << "\": ";
 
         if (list.size() > 1)
         {
-
-            ss << "[";
+            // --- Handle Arrays ---
+            ss << "[\n";
             for (size_t k = 0; k < list.size(); ++k)
             {
-                nodeToJSON(list[k], ss);
-                if (k < list.size() - 1)
-                    ss << ", " << "\n";
+                ss << getIndent(level + 2); // Indent array items further
+                nodeToJSON(list[k], ss, level + 2);
+                
+                if (k < list.size() - 1) ss << ",\n"; // Comma between items
+                else ss << "\n";
             }
-            ss << "]";
+            ss << getIndent(level + 1) << "]";
         }
         else
         {
-
-            nodeToJSON(list[0], ss);
+            // --- Handle Single Objects ---
+            nodeToJSON(list[0], ss, level + 1);
         }
 
+        // Comma between keys (if not the last one)
         if (i < order.size() - 1)
-            ss << ", " << "\n";
+            ss << ",\n";
+        else
+            ss << "\n";
     }
 
-    ss << "}";
+    // Closing brace with proper indentation
+    ss << getIndent(level) << "}";
 }
 
 string json(const string &xml)
 {
     XMLNode *root = parseXML(xml);
-    if (!root)
-        return "{}";
+    if (!root) return "{}";
 
     stringstream ss;
-    ss << "{" << "\n"
-       << "\" " << root->name << "\": ";
-    nodeToJSON(root, ss);
-    ss << " }";
+    ss << "{\n";
+    
+    // Fixed a small bug here: You had a space inside the quote "\" " which made keys look like " users"
+    ss << getIndent(1) << "\"" << root->name << "\": "; 
+    
+    nodeToJSON(root, ss, 1); // Start recursion at level 1
+    
+    ss << "\n}"; // Close the main object
 
     delete root;
     return ss.str();
