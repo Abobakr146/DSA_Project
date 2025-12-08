@@ -3,6 +3,9 @@
 #include <sstream>
 #include <cstring>
 #include <functional>
+#include <algorithm>
+#include <fstream>
+
 
 using namespace std;
 
@@ -176,9 +179,128 @@ string format(const string& xml) {
     return "";
 }
 
-string json(const string& xml) {
-    return "";
+struct XMLNode {
+    string name;
+    string content;
+    vector<XMLNode*> children;
+    XMLNode(string n) : name(n), content("") {} // new way to implement the constructor, it will intialize the values while making the object
+
+    ~XMLNode() {
+        for (auto child : children) {
+            delete child;
+        }
+    }
+};
+
+
+string trim(const string& str) {                       //  عملت ال function دي عشان ميسجلش ال \n والt وال \r
+    size_t first = str.find_first_not_of(" \t\n\r");    
+    if (first == string::npos) return "";
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, (last - first + 1));
 }
+
+
+XMLNode* parseXML(const string& xml) {
+    XMLNode* root = nullptr;
+    stack<XMLNode*> nodeStack;
+    size_t pos = 0;
+    while (pos < xml.length()) {
+     size_t lt = xml.find('<', pos); 
+     if (lt == string::npos) break;
+        if (lt > pos) {
+            string text = trim(xml.substr(pos, lt - pos));
+            if (!text.empty() && !nodeStack.empty()) {
+                nodeStack.top()->content = text;
+            }
+        }
+        size_t gt = xml.find('>', lt);
+        if (gt == string::npos) break; 
+        string tagContent = xml.substr(lt + 1, gt - lt - 1);
+        if (tagContent[0] == '/') {
+            if (!nodeStack.empty()) {
+                nodeStack.pop();
+            }
+        } 
+        else {
+            string tagName = tagContent; 
+            
+            XMLNode* newNode = new XMLNode(tagName);
+
+            if (nodeStack.empty()) {
+                root = newNode; 
+            } else {
+                nodeStack.top()->children.push_back(newNode); // هنا سواء انا كنت parent او 
+            //children ما دام في children جديدة جت هيبقا اخر حاجة موجود في ال node stack هو ال parent بتاعها
+                 
+            }
+            
+            nodeStack.push(newNode);         }
+
+        pos = gt + 1;
+    }
+
+    return root;
+}
+
+
+void nodeToJSON(XMLNode* node, stringstream& ss) {
+    if (!node) return;
+    if (node->children.empty()) {
+        ss << "\"" << node->content << "\"";
+        return;
+    }
+
+    ss << "{";
+    map<string, vector<XMLNode*>> groups; 
+    vector<string> order; 
+
+    for (auto child : node->children) {
+        if (groups.find(child->name) == groups.end()) {
+            order.push_back(child->name);
+        }
+        groups[child->name].push_back(child);
+    }
+
+    for (size_t i = 0; i < order.size(); ++i) {
+        string key = order[i];
+        const auto& list = groups[key];
+
+        ss << "\"" << key << "\": ";
+
+        if (list.size() > 1) {
+        
+            ss << "[";
+            for (size_t k = 0; k < list.size(); ++k) {
+                nodeToJSON(list[k], ss);
+                if (k < list.size() - 1) ss << ", "<<"\n";
+            }
+            ss << "]";
+        } else {
+
+            nodeToJSON(list[0], ss);
+        }
+
+        if (i < order.size() - 1) ss << ", "<<"\n";
+    }
+ 
+    ss << "}";
+}
+
+
+string convertXmlToJson(const string& xml) {
+    XMLNode* root = parseXML(xml);
+    if (!root) return "{}";
+
+    stringstream ss;
+    ss << "{" <<"\n"<<"\" "<< root->name << "\": ";
+    nodeToJSON(root, ss);
+    ss << " }";
+
+    delete root; 
+    return ss.str();
+}
+
 
 string mini(const string& xml) {
         string result;
