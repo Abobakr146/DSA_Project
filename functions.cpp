@@ -181,40 +181,26 @@ string json(const string& xml) {
 }
 
 string mini(const string& xml) {
-    string output;
-    bool inTag = false;   // true when inside <...>
-    bool inText = false;  // true when between > and next <
+        string result;
+    bool insideTag = false;
 
     for (char c : xml) {
         if (c == '<') {
-            inTag = true;
-            inText = false;
-            output += c;
-        }
-        else if (c == '>') {
-            inTag = false;
-            inText = true;
-            output += c;
-        }
-        else {
-            if (inTag) {
-                // Inside a tag name or attribute: remove ALL whitespace
-                if (c != ' ' && c != '\n' && c != '\t' && c != '\r')
-                    output += c;
-            }
-            else if (inText) {
-                // Inside text content: KEEP spaces between words, remove formatting whitespace
-                if (c == '\n' || c == '\t' || c == '\r')
-                    continue;
-
-                // Remove multiple spaces; keep single space
-                if (!(c == ' ' && (output.back() == ' ' || output.back() == '>')))
-                    output += c;
+            insideTag = true;
+            result += c;
+        } else if (c == '>') {
+            insideTag = false;
+            result += c;
+        } else {
+            if (insideTag) {
+                result += c;
+            } else if (c != ' ' && c != '\n' && c != '\t' && c != '\r') {
+                result += c;
             }
         }
     }
 
-    return output;
+    return result;
 }
 
 string compress(const string& xml) {
