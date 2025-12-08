@@ -377,36 +377,50 @@ string json(const string &xml)
 }
 
 string mini(const string &xml)
-{
-    string output;
-    bool insideTag = false;
+{ string output = "";  
+
+    bool inTag = false;   
+    bool inText = false;
 
     for (char c : xml)
     {
         if (c == '<')
         {
-            insideTag = true;
+            inTag = true;
+            inText = false;
             output += c;
         }
         else if (c == '>')
         {
-            insideTag = false;
+            inTag = false;
+            inText = true;
             output += c;
         }
         else
         {
-            if (insideTag)
+            if (inTag)
             {
-                // keep everything inside tags
-                output += c;
-            }
-            else
-            {
-                // outside tags: remove whitespace
                 if (c != ' ' && c != '\n' && c != '\t' && c != '\r')
-                {
                     output += c;
+            }
+            else if (inText)
+            {
+                if (c == '\n' || c == '\t' || c == '\r')
+                    continue;
+
+                // Simulate output.back() without using back()
+                bool lastIsSpace = false;
+                bool lastIsTag = false;
+
+                if (output.length() > 0)
+                {
+                    char last = output[output.length() - 1];
+                    lastIsSpace = (last == ' ');
+                    lastIsTag = (last == '>');
                 }
+
+                if (!(c == ' ' && (lastIsSpace || lastIsTag)))
+                    output += c;
             }
         }
     }
