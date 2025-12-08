@@ -2,7 +2,7 @@
 
 # Compile
 ```bash
-g++ xml_editor.cpp -o xml_editor.exe
+g++ xml_editor.cpp functions.cpp utils.cpp -o xml_editor.exe
 ```
 
 # For Windows
