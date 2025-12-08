@@ -378,7 +378,7 @@ string json(const string &xml)
 
 string mini(const string &xml)
 {
-    string result;
+    string output;
     bool insideTag = false;
 
     for (char c : xml)
@@ -386,27 +386,32 @@ string mini(const string &xml)
         if (c == '<')
         {
             insideTag = true;
-            result += c;
+            output += c;
         }
         else if (c == '>')
         {
             insideTag = false;
-            result += c;
+            output += c;
         }
         else
         {
             if (insideTag)
             {
-                result += c;
+                // keep everything inside tags
+                output += c;
             }
-            else if (c != ' ' && c != '\n' && c != '\t' && c != '\r')
+            else
             {
-                result += c;
+                // outside tags: remove whitespace
+                if (c != ' ' && c != '\n' && c != '\t' && c != '\r')
+                {
+                    output += c;
+                }
             }
         }
     }
 
-    return result;
+    return output;
 }
 
 string compress(const string &xml)
