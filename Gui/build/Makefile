@@ -116,74 +116,74 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named MineProject
+# Target rules for targets named XmlGui
 
 # Build rule for target.
-MineProject: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 MineProject
-.PHONY : MineProject
+XmlGui: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 XmlGui
+.PHONY : XmlGui
 
 # fast build rule for target.
-MineProject/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/build
-.PHONY : MineProject/fast
+XmlGui/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/build
+.PHONY : XmlGui/fast
 
 #=============================================================================
-# Target rules for targets named MineProject_autogen_timestamp_deps
+# Target rules for targets named XmlGui_autogen_timestamp_deps
 
 # Build rule for target.
-MineProject_autogen_timestamp_deps: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 MineProject_autogen_timestamp_deps
-.PHONY : MineProject_autogen_timestamp_deps
+XmlGui_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 XmlGui_autogen_timestamp_deps
+.PHONY : XmlGui_autogen_timestamp_deps
 
 # fast build rule for target.
-MineProject_autogen_timestamp_deps/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen_timestamp_deps.dir\build.make CMakeFiles/MineProject_autogen_timestamp_deps.dir/build
-.PHONY : MineProject_autogen_timestamp_deps/fast
+XmlGui_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen_timestamp_deps.dir\build.make CMakeFiles/XmlGui_autogen_timestamp_deps.dir/build
+.PHONY : XmlGui_autogen_timestamp_deps/fast
 
 #=============================================================================
-# Target rules for targets named MineProject_autogen
+# Target rules for targets named XmlGui_autogen
 
 # Build rule for target.
-MineProject_autogen: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 MineProject_autogen
-.PHONY : MineProject_autogen
+XmlGui_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 XmlGui_autogen
+.PHONY : XmlGui_autogen
 
 # fast build rule for target.
-MineProject_autogen/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen.dir\build.make CMakeFiles/MineProject_autogen.dir/build
-.PHONY : MineProject_autogen/fast
+XmlGui_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen.dir\build.make CMakeFiles/XmlGui_autogen.dir/build
+.PHONY : XmlGui_autogen/fast
 
-MineProject_autogen/mocs_compilation.obj: MineProject_autogen/mocs_compilation.cpp.obj
-.PHONY : MineProject_autogen/mocs_compilation.obj
+XmlGui_autogen/mocs_compilation.obj: XmlGui_autogen/mocs_compilation.cpp.obj
+.PHONY : XmlGui_autogen/mocs_compilation.obj
 
 # target to build an object file
-MineProject_autogen/mocs_compilation.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/MineProject_autogen/mocs_compilation.cpp.obj
-.PHONY : MineProject_autogen/mocs_compilation.cpp.obj
+XmlGui_autogen/mocs_compilation.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/XmlGui_autogen/mocs_compilation.cpp.obj
+.PHONY : XmlGui_autogen/mocs_compilation.cpp.obj
 
-MineProject_autogen/mocs_compilation.i: MineProject_autogen/mocs_compilation.cpp.i
-.PHONY : MineProject_autogen/mocs_compilation.i
+XmlGui_autogen/mocs_compilation.i: XmlGui_autogen/mocs_compilation.cpp.i
+.PHONY : XmlGui_autogen/mocs_compilation.i
 
 # target to preprocess a source file
-MineProject_autogen/mocs_compilation.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/MineProject_autogen/mocs_compilation.cpp.i
-.PHONY : MineProject_autogen/mocs_compilation.cpp.i
+XmlGui_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/XmlGui_autogen/mocs_compilation.cpp.i
+.PHONY : XmlGui_autogen/mocs_compilation.cpp.i
 
-MineProject_autogen/mocs_compilation.s: MineProject_autogen/mocs_compilation.cpp.s
-.PHONY : MineProject_autogen/mocs_compilation.s
+XmlGui_autogen/mocs_compilation.s: XmlGui_autogen/mocs_compilation.cpp.s
+.PHONY : XmlGui_autogen/mocs_compilation.s
 
 # target to generate assembly for a file
-MineProject_autogen/mocs_compilation.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/MineProject_autogen/mocs_compilation.cpp.s
-.PHONY : MineProject_autogen/mocs_compilation.cpp.s
+XmlGui_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/XmlGui_autogen/mocs_compilation.cpp.s
+.PHONY : XmlGui_autogen/mocs_compilation.cpp.s
 
 functions.obj: functions.cpp.obj
 .PHONY : functions.obj
 
 # target to build an object file
 functions.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/functions.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/functions.cpp.obj
 .PHONY : functions.cpp.obj
 
 functions.i: functions.cpp.i
@@ -191,7 +191,7 @@ functions.i: functions.cpp.i
 
 # target to preprocess a source file
 functions.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/functions.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/functions.cpp.i
 .PHONY : functions.cpp.i
 
 functions.s: functions.cpp.s
@@ -199,7 +199,7 @@ functions.s: functions.cpp.s
 
 # target to generate assembly for a file
 functions.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/functions.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/functions.cpp.s
 .PHONY : functions.cpp.s
 
 main.obj: main.cpp.obj
@@ -207,7 +207,7 @@ main.obj: main.cpp.obj
 
 # target to build an object file
 main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/main.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/main.cpp.obj
 .PHONY : main.cpp.obj
 
 main.i: main.cpp.i
@@ -215,7 +215,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -223,7 +223,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 mainwindow.obj: mainwindow.cpp.obj
@@ -231,7 +231,7 @@ mainwindow.obj: mainwindow.cpp.obj
 
 # target to build an object file
 mainwindow.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/mainwindow.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/mainwindow.cpp.obj
 .PHONY : mainwindow.cpp.obj
 
 mainwindow.i: mainwindow.cpp.i
@@ -239,7 +239,7 @@ mainwindow.i: mainwindow.cpp.i
 
 # target to preprocess a source file
 mainwindow.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/mainwindow.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/mainwindow.cpp.i
 .PHONY : mainwindow.cpp.i
 
 mainwindow.s: mainwindow.cpp.s
@@ -247,7 +247,7 @@ mainwindow.s: mainwindow.cpp.s
 
 # target to generate assembly for a file
 mainwindow.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/mainwindow.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/mainwindow.cpp.s
 .PHONY : mainwindow.cpp.s
 
 utils.obj: utils.cpp.obj
@@ -255,7 +255,7 @@ utils.obj: utils.cpp.obj
 
 # target to build an object file
 utils.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/utils.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/utils.cpp.obj
 .PHONY : utils.cpp.obj
 
 utils.i: utils.cpp.i
@@ -263,7 +263,7 @@ utils.i: utils.cpp.i
 
 # target to preprocess a source file
 utils.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/utils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/utils.cpp.i
 .PHONY : utils.cpp.i
 
 utils.s: utils.cpp.s
@@ -271,7 +271,7 @@ utils.s: utils.cpp.s
 
 # target to generate assembly for a file
 utils.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/utils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/utils.cpp.s
 .PHONY : utils.cpp.s
 
 # Help Target
@@ -282,12 +282,12 @@ help:
 	@echo ... depend
 	@echo ... edit_cache
 	@echo ... rebuild_cache
-	@echo ... MineProject_autogen
-	@echo ... MineProject_autogen_timestamp_deps
-	@echo ... MineProject
-	@echo ... MineProject_autogen/mocs_compilation.obj
-	@echo ... MineProject_autogen/mocs_compilation.i
-	@echo ... MineProject_autogen/mocs_compilation.s
+	@echo ... XmlGui_autogen
+	@echo ... XmlGui_autogen_timestamp_deps
+	@echo ... XmlGui
+	@echo ... XmlGui_autogen/mocs_compilation.obj
+	@echo ... XmlGui_autogen/mocs_compilation.i
+	@echo ... XmlGui_autogen/mocs_compilation.s
 	@echo ... functions.obj
 	@echo ... functions.i
 	@echo ... functions.s

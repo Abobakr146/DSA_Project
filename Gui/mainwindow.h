@@ -43,10 +43,14 @@ private slots:
 private:
     Ui::MainWindow *ui;
     
+    // Track binary output state
+    bool lastOutputWasBinary;
+    std::string lastBinaryOutput;
+    
     // Helper functions
     QString saveTextToTempFile(const QString& text);
     void executeFunction(const std::string& funcName);
-    std::string readFile(const std::string& filePath); // For compatibility
+    std::string readFile(const std::string& filePath);
 };
 
 #endif // MAINWINDOW_H

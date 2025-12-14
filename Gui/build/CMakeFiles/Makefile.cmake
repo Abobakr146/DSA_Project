@@ -276,7 +276,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "CMakeFiles/4.2.1/CMakeRCCompiler.cmake"
   "CMakeFiles/4.2.1/CMakeCXXCompiler.cmake"
   "CMakeFiles/4.2.1/CMakeCXXCompiler.cmake"
-  "CMakeFiles/MineProject_autogen.dir/AutogenInfo.json"
+  "CMakeFiles/XmlGui_autogen.dir/AutogenInfo.json"
   ".qt/QtDeploySupport.cmake"
   ".qt/QtDeployTargets.cmake"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
@@ -284,7 +284,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/MineProject.dir/DependInfo.cmake"
-  "CMakeFiles/MineProject_autogen_timestamp_deps.dir/DependInfo.cmake"
-  "CMakeFiles/MineProject_autogen.dir/DependInfo.cmake"
+  "CMakeFiles/XmlGui.dir/DependInfo.cmake"
+  "CMakeFiles/XmlGui_autogen_timestamp_deps.dir/DependInfo.cmake"
+  "CMakeFiles/XmlGui_autogen.dir/DependInfo.cmake"
   )

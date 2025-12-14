@@ -13,7 +13,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Add source files WITH WIN32 FLAG
-add_executable(MineProject WIN32
+add_executable(XmlGui WIN32
     main.cpp
     mainwindow.cpp
     functions.cpp
@@ -21,4 +21,4 @@ add_executable(MineProject WIN32
 )
 
 # Link against Qt libraries
-target_link_libraries(MineProject PRIVATE Qt6::Widgets)
+target_link_libraries(XmlGui PRIVATE Qt6::Widgets)

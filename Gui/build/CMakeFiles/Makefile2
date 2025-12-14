@@ -62,11 +62,11 @@ CMAKE_BINARY_DIR = C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/MineProject.dir/all
+all: CMakeFiles/XmlGui.dir/all
 .PHONY : all
 
 # The main recursive "codegen" target.
-codegen: CMakeFiles/MineProject.dir/codegen
+codegen: CMakeFiles/XmlGui.dir/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
@@ -74,107 +74,107 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/MineProject.dir/clean
-clean: CMakeFiles/MineProject_autogen_timestamp_deps.dir/clean
-clean: CMakeFiles/MineProject_autogen.dir/clean
+clean: CMakeFiles/XmlGui.dir/clean
+clean: CMakeFiles/XmlGui_autogen_timestamp_deps.dir/clean
+clean: CMakeFiles/XmlGui_autogen.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/MineProject.dir
+# Target rules for target CMakeFiles/XmlGui.dir
 
 # All Build rule for target.
-CMakeFiles/MineProject.dir/all: CMakeFiles/MineProject_autogen_timestamp_deps.dir/all
-CMakeFiles/MineProject.dir/all: CMakeFiles/MineProject_autogen.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=1,2,3,4,5,6,7 "Built target MineProject"
-.PHONY : CMakeFiles/MineProject.dir/all
+CMakeFiles/XmlGui.dir/all: CMakeFiles/XmlGui_autogen.dir/all
+CMakeFiles/XmlGui.dir/all: CMakeFiles/XmlGui_autogen_timestamp_deps.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=1,2,3,4,5,6,7 "Built target XmlGui"
+.PHONY : CMakeFiles/XmlGui.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/MineProject.dir/rule: cmake_check_build_system
+CMakeFiles/XmlGui.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles 8
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/MineProject.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/XmlGui.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles 0
-.PHONY : CMakeFiles/MineProject.dir/rule
+.PHONY : CMakeFiles/XmlGui.dir/rule
 
 # Convenience name for target.
-MineProject: CMakeFiles/MineProject.dir/rule
-.PHONY : MineProject
+XmlGui: CMakeFiles/XmlGui.dir/rule
+.PHONY : XmlGui
 
 # codegen rule for target.
-CMakeFiles/MineProject.dir/codegen: CMakeFiles/MineProject_autogen_timestamp_deps.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=1,2,3,4,5,6,7 "Finished codegen for target MineProject"
-.PHONY : CMakeFiles/MineProject.dir/codegen
+CMakeFiles/XmlGui.dir/codegen: CMakeFiles/XmlGui_autogen_timestamp_deps.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=1,2,3,4,5,6,7 "Finished codegen for target XmlGui"
+.PHONY : CMakeFiles/XmlGui.dir/codegen
 
 # clean rule for target.
-CMakeFiles/MineProject.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject.dir\build.make CMakeFiles/MineProject.dir/clean
-.PHONY : CMakeFiles/MineProject.dir/clean
+CMakeFiles/XmlGui.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui.dir\build.make CMakeFiles/XmlGui.dir/clean
+.PHONY : CMakeFiles/XmlGui.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/MineProject_autogen_timestamp_deps.dir
+# Target rules for target CMakeFiles/XmlGui_autogen_timestamp_deps.dir
 
 # All Build rule for target.
-CMakeFiles/MineProject_autogen_timestamp_deps.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen_timestamp_deps.dir\build.make CMakeFiles/MineProject_autogen_timestamp_deps.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen_timestamp_deps.dir\build.make CMakeFiles/MineProject_autogen_timestamp_deps.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num= "Built target MineProject_autogen_timestamp_deps"
-.PHONY : CMakeFiles/MineProject_autogen_timestamp_deps.dir/all
+CMakeFiles/XmlGui_autogen_timestamp_deps.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen_timestamp_deps.dir\build.make CMakeFiles/XmlGui_autogen_timestamp_deps.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen_timestamp_deps.dir\build.make CMakeFiles/XmlGui_autogen_timestamp_deps.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num= "Built target XmlGui_autogen_timestamp_deps"
+.PHONY : CMakeFiles/XmlGui_autogen_timestamp_deps.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/MineProject_autogen_timestamp_deps.dir/rule: cmake_check_build_system
+CMakeFiles/XmlGui_autogen_timestamp_deps.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles 0
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/MineProject_autogen_timestamp_deps.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/XmlGui_autogen_timestamp_deps.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles 0
-.PHONY : CMakeFiles/MineProject_autogen_timestamp_deps.dir/rule
+.PHONY : CMakeFiles/XmlGui_autogen_timestamp_deps.dir/rule
 
 # Convenience name for target.
-MineProject_autogen_timestamp_deps: CMakeFiles/MineProject_autogen_timestamp_deps.dir/rule
-.PHONY : MineProject_autogen_timestamp_deps
+XmlGui_autogen_timestamp_deps: CMakeFiles/XmlGui_autogen_timestamp_deps.dir/rule
+.PHONY : XmlGui_autogen_timestamp_deps
 
 # codegen rule for target.
-CMakeFiles/MineProject_autogen_timestamp_deps.dir/codegen:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen_timestamp_deps.dir\build.make CMakeFiles/MineProject_autogen_timestamp_deps.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num= "Finished codegen for target MineProject_autogen_timestamp_deps"
-.PHONY : CMakeFiles/MineProject_autogen_timestamp_deps.dir/codegen
+CMakeFiles/XmlGui_autogen_timestamp_deps.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen_timestamp_deps.dir\build.make CMakeFiles/XmlGui_autogen_timestamp_deps.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num= "Finished codegen for target XmlGui_autogen_timestamp_deps"
+.PHONY : CMakeFiles/XmlGui_autogen_timestamp_deps.dir/codegen
 
 # clean rule for target.
-CMakeFiles/MineProject_autogen_timestamp_deps.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen_timestamp_deps.dir\build.make CMakeFiles/MineProject_autogen_timestamp_deps.dir/clean
-.PHONY : CMakeFiles/MineProject_autogen_timestamp_deps.dir/clean
+CMakeFiles/XmlGui_autogen_timestamp_deps.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen_timestamp_deps.dir\build.make CMakeFiles/XmlGui_autogen_timestamp_deps.dir/clean
+.PHONY : CMakeFiles/XmlGui_autogen_timestamp_deps.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/MineProject_autogen.dir
+# Target rules for target CMakeFiles/XmlGui_autogen.dir
 
 # All Build rule for target.
-CMakeFiles/MineProject_autogen.dir/all: CMakeFiles/MineProject_autogen_timestamp_deps.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen.dir\build.make CMakeFiles/MineProject_autogen.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen.dir\build.make CMakeFiles/MineProject_autogen.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=8 "Built target MineProject_autogen"
-.PHONY : CMakeFiles/MineProject_autogen.dir/all
+CMakeFiles/XmlGui_autogen.dir/all: CMakeFiles/XmlGui_autogen_timestamp_deps.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen.dir\build.make CMakeFiles/XmlGui_autogen.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen.dir\build.make CMakeFiles/XmlGui_autogen.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=8 "Built target XmlGui_autogen"
+.PHONY : CMakeFiles/XmlGui_autogen.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/MineProject_autogen.dir/rule: cmake_check_build_system
+CMakeFiles/XmlGui_autogen.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles 1
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/MineProject_autogen.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/XmlGui_autogen.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles 0
-.PHONY : CMakeFiles/MineProject_autogen.dir/rule
+.PHONY : CMakeFiles/XmlGui_autogen.dir/rule
 
 # Convenience name for target.
-MineProject_autogen: CMakeFiles/MineProject_autogen.dir/rule
-.PHONY : MineProject_autogen
+XmlGui_autogen: CMakeFiles/XmlGui_autogen.dir/rule
+.PHONY : XmlGui_autogen
 
 # codegen rule for target.
-CMakeFiles/MineProject_autogen.dir/codegen: CMakeFiles/MineProject_autogen_timestamp_deps.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen.dir\build.make CMakeFiles/MineProject_autogen.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=8 "Finished codegen for target MineProject_autogen"
-.PHONY : CMakeFiles/MineProject_autogen.dir/codegen
+CMakeFiles/XmlGui_autogen.dir/codegen: CMakeFiles/XmlGui_autogen_timestamp_deps.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen.dir\build.make CMakeFiles/XmlGui_autogen.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\alima\OneDrive\Desktop\DSA_Project\Gui\build\CMakeFiles --progress-num=8 "Finished codegen for target XmlGui_autogen"
+.PHONY : CMakeFiles/XmlGui_autogen.dir/codegen
 
 # clean rule for target.
-CMakeFiles/MineProject_autogen.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\MineProject_autogen.dir\build.make CMakeFiles/MineProject_autogen.dir/clean
-.PHONY : CMakeFiles/MineProject_autogen.dir/clean
+CMakeFiles/XmlGui_autogen.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\XmlGui_autogen.dir\build.make CMakeFiles/XmlGui_autogen.dir/clean
+.PHONY : CMakeFiles/XmlGui_autogen.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.
