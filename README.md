@@ -31,7 +31,7 @@ g++ xml_editor.cpp functions.cpp utils.cpp -o xml_editor.exe
 
 - Decompress
 ```bash
-.\xml_editor.exe decompress -i input_file.comp -o output_file.xml
+.\xml_editor.exe decompress -i output_file.comp -o output_file.xml
 ```
 
 # For Linux/macOS/Unix
