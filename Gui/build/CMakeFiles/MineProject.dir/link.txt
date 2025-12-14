@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\MineProject.dir/objects.a
+C:\Qt\Tools\mingw1310_64\bin\ar.exe qc CMakeFiles\MineProject.dir/objects.a @CMakeFiles\MineProject.dir\objects1.rsp
+C:\Qt\Tools\mingw1310_64\bin\c++.exe -mwindows -Wl,--whole-archive CMakeFiles\MineProject.dir/objects.a -Wl,--no-whole-archive -o MineProject.exe -Wl,--out-implib,libMineProject.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\MineProject.dir\linkLibs.rsp
