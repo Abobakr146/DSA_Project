@@ -57,6 +57,12 @@ bool writeCompressedFile(const string &filename, const vector<unsigned char> &da
 
 bool oneIterationBPE(vector<unsigned char> &data, unsigned char &nextFreeByte)
 {
+
+    if (BPE_DICTIONARY.size() >= 128)
+    {
+        return false;
+    }
+
     if (data.size() < 2 || nextFreeByte > 255)
     {
         return false;
@@ -207,7 +213,8 @@ string format(const string &xml)
 }
 
 // Helper to generate indentation spaces based on depth
-string getIndent(int level) {
+string getIndent(int level)
+{
     return string(level * 4, ' '); // 4 spaces per level
 }
 
@@ -292,7 +299,8 @@ XMLNode *parseXML(const string &xml)
 
 void nodeToJSON(XMLNode *node, stringstream &ss, int level)
 {
-    if (!node) return;
+    if (!node)
+        return;
 
     // Case 1: It's a leaf node (just text content, no children)
     if (node->children.empty())
@@ -334,9 +342,11 @@ void nodeToJSON(XMLNode *node, stringstream &ss, int level)
             {
                 ss << getIndent(level + 2); // Indent array items further
                 nodeToJSON(list[k], ss, level + 2);
-                
-                if (k < list.size() - 1) ss << ",\n"; // Comma between items
-                else ss << "\n";
+
+                if (k < list.size() - 1)
+                    ss << ",\n"; // Comma between items
+                else
+                    ss << "\n";
             }
             ss << getIndent(level + 1) << "]";
         }
@@ -360,16 +370,17 @@ void nodeToJSON(XMLNode *node, stringstream &ss, int level)
 string json(const string &xml)
 {
     XMLNode *root = parseXML(xml);
-    if (!root) return "{}";
+    if (!root)
+        return "{}";
 
     stringstream ss;
     ss << "{\n";
-    
+
     // Fixed a small bug here: You had a space inside the quote "\" " which made keys look like " users"
-    ss << getIndent(1) << "\"" << root->name << "\": "; 
-    
+    ss << getIndent(1) << "\"" << root->name << "\": ";
+
     nodeToJSON(root, ss, 1); // Start recursion at level 1
-    
+
     ss << "\n}"; // Close the main object
 
     delete root;
@@ -377,9 +388,10 @@ string json(const string &xml)
 }
 
 string mini(const string &xml)
-{ string output = "";  
+{
+    string output = "";
 
-    bool inTag = false;   
+    bool inTag = false;
     bool inText = false;
 
     for (char c : xml)
