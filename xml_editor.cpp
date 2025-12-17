@@ -1,5 +1,6 @@
 #include "functions.h"
 #include "utils.h"
+#include "graph.h"
 
 int main(int argc, char* argv[]) {
     string input_path;
@@ -86,7 +87,12 @@ int main(int argc, char* argv[]) {
     bool writeSuccess;
     if (operation == "compress") {
         writeSuccess = writeBinaryToFile(output_path, updated_xml);
-    } else {
+    } 
+    else if (operation == "draw") {
+        drawXMLGraph(xml_content, output_path);
+        writeSuccess = true;
+    }
+    else {
         writeSuccess = writeToFile(output_path, updated_xml);
     }
     
