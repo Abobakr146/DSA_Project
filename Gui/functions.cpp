@@ -126,85 +126,348 @@ bool oneIterationBPE(vector<unsigned char> &data, unsigned char &nextFreeByte)
 
 // ==================== XML Processing Functions ====================
 
-string verify(const string &xml)
-{
+string verify(const string &xml) {
     stack<string> tagStack;
-    string result = "XML is valid - all tags are properly matched\n";
+    string result = "";
     int i = 0;
     int lineNum = 1;
-    while (i < xml.length())
-    {
-        if (xml[i] == '\n')
-        {
+    int numberOfErrors = 0;
+    
+    while (i < xml.length()) {
+        if (xml[i] == '\n') {
             lineNum++;
         }
-        if (xml[i] == '<')
-        {
+        
+        if(xml[i] == '>') {
+            // Check if this '>' has a matching '<' before it
+            bool hasMatchingOpen = false;
+            int searchPos = i - 1;
+
+            // Search backwards for '<'
+            while (searchPos >= 0 && xml[searchPos] != '<') {
+                if (xml[searchPos] == '<') {
+                    hasMatchingOpen = true;
+                    break;
+                }
+                if (xml[searchPos] == '>') {
+                    // Found another '>' first, so this '>' is orphaned
+                    break;
+                }
+                searchPos--;
+            }
+
+            if (!hasMatchingOpen) {
+                result += "Error at line " + to_string(lineNum) + ": Missing '<' for '>'\n";
+                numberOfErrors++;
+            }
+            i++;
+
+        } else if (xml[i] == '<') {
             int nextOpenTag = xml.find('<', i + 1);
             int tagEnd = xml.find_first_of('>', i);
-            if ((nextOpenTag != string::npos && nextOpenTag < tagEnd) || tagEnd == string::npos)
-            {
-                result = "Error at line " + to_string(lineNum) + ": Unclosed tag bracket\n";
-                return result;
+            
+            if ((nextOpenTag != string::npos && nextOpenTag < tagEnd) || tagEnd == string::npos) {
+                result += "Error at line " + to_string(lineNum) + ": Unclosed tag bracket\n";
+                numberOfErrors++;
+                i++;  // Move forward to avoid infinite loop
+                continue;
             }
+            
             string tagContent = xml.substr(i + 1, tagEnd - i - 1);
-            if (tagContent[0] == '?' || tagContent[0] == '!')
-            {
-                // Skip XML declaration and comments
-                // Validate XML declaration ends with ?
-                if (tagContent.back() != '?')
-                {
-                    result = "Error at line " + to_string(lineNum) + ": Malformed XML declaration\n";
-                    return result;
+            
+            if (tagContent[0] == '?') {
+                // XML declaration must end with '?'
+                if (tagContent.back() != '?') {
+                    result += "Error at line " + to_string(lineNum) + ": Malformed XML declaration\n";
+                    numberOfErrors++;
                 }
                 i = tagEnd + 1;
                 continue;
             }
-            if (tagContent.back() == '/')
-            {
-                // Self-closing tag, do nothing
+            
+            if (tagContent[0] == '!' || tagContent.back() == '/') {
+                // skip comments and self-closing tags
                 i = tagEnd + 1;
                 continue;
             }
-            if (tagContent[0] == '/')
-            {
+            
+            if (tagContent[0] == '/') {
+                // closing tag
                 string closingTag = tagContent.substr(1);
                 int spaceIndex = closingTag.find(' ');
-                if (spaceIndex != string::npos)
-                {
+                if (spaceIndex != string::npos) {
                     closingTag = closingTag.substr(0, spaceIndex);
                 }
-                if (tagStack.empty())
-                {
-                    result = "Error at line " + to_string(lineNum) + ": No matching opening tag for </" + closingTag + ">\n";
-                    return result;
+                
+                if (tagStack.empty()) {
+                    result += "Error at line " + to_string(lineNum) + ": No matching opening tag for </" + closingTag + ">\n";
+                    numberOfErrors++;
+                } else {
+                    string expectedTag = tagStack.top();
+                    if (expectedTag != closingTag) {
+                        result += "Error at line " + to_string(lineNum) + ": Mismatched tags\n";
+                        numberOfErrors++;
+                    } else {
+                        tagStack.pop();
+                    }
                 }
-                string expectedTag = tagStack.top();
-                if (expectedTag != closingTag)
-                {
-                    result = "Error at line " + to_string(lineNum) + ": Mismatched tags. Expected </" + expectedTag + "> but found </" + closingTag + ">\n";
-                    return result;
-                }
-                tagStack.pop();
-            }
-            else
-            {
+            } else {
+                // opening tag
                 string openTag = tagContent;
                 int spaceIndex = openTag.find(' ');
-                if (spaceIndex != string::npos)
-                {
+                if (spaceIndex != string::npos) {
                     openTag = openTag.substr(0, spaceIndex);
                 }
                 tagStack.push(openTag);
             }
+            
             i = tagEnd + 1;
-        }
-        else
-        {
+        } else {
             i++;
         }
     }
-    return result;
+    
+    // check for unclosed tags
+    if (!tagStack.empty()) {
+        result += "Error: Unclosed tags found:\n";
+        while (!tagStack.empty()) {
+            result += "  - <" + tagStack.top() + ">\n";
+            tagStack.pop();
+            numberOfErrors++;
+        }
+    }
+    
+    // final output to console
+    if (numberOfErrors == 0) {
+        result = "Valid";
+        cout << result << endl;
+    } else {
+        result = "Invalid\nTotal Errors: " + to_string(numberOfErrors) + "\n" + result;
+        cout << result << endl;
+    }
+    
+    return xml;
+}
+
+string fixation(const string &xml) {
+    cout << "begin fixing\n";
+
+    // XML has errors - fix the errors
+
+    string fixedXml = xml;  // work on a copy
+    stack<string> tagStack;
+    stack<int> tagPositions;  // track positions for inserting closing tags
+    int i = 0;
+    int lineNum = 1;
+    
+    while (i < fixedXml.length()) {
+        if (fixedXml[i] == '\n') {
+            lineNum++;
+        }
+        
+        if (fixedXml[i] == '<') {
+            int nextOpenTag = fixedXml.find('<', i + 1);
+            int tagEnd = fixedXml.find_first_of('>', i);
+            int previousCloseBracket = fixedXml.rfind('>', i - 1);
+            
+            // fix 1: unclosed tag bracket
+            // fix 1: unclosed tag bracket
+            if ((nextOpenTag != string::npos && nextOpenTag < tagEnd) || tagEnd == string::npos) {
+                cout << "Missing close bracket\n";
+                if (tagEnd == string::npos) {
+                    // no '>' found at all - find where tag name/attributes end
+                    // look for whitespace or newline after the tag name
+                    cout << "Add missing close bracket at file end\n";
+                    int insertPos = i + 1;
+                    while (insertPos < fixedXml.length() && 
+                            fixedXml[insertPos] != ' ' && 
+                            fixedXml[insertPos] != '\n' && 
+                            fixedXml[insertPos] != '\t' &&
+                            fixedXml[insertPos] != '<') {
+                        insertPos++;
+                    }
+                    fixedXml.insert(insertPos, ">");
+                    tagEnd = insertPos;
+                    cout << "Finished adding missing close bracket at file end\n";
+                } else {
+                    // there's a '<' before the '>'
+                    // insert '>' right after tag name/attributes, not at nextOpenTag
+                    cout << "Add missing close bracket at line: " << lineNum << "\n";
+                    int insertPos = i + 1;
+                    while (insertPos < nextOpenTag && 
+                            fixedXml[insertPos] != '\n' && 
+                            fixedXml[insertPos] != '<') {
+                        insertPos++;
+                    }
+                    // back up to last non-whitespace character
+                    while (insertPos > i + 1 && 
+                            (fixedXml[insertPos - 1] == ' ' || 
+                            fixedXml[insertPos - 1] == '\t')) {
+                        insertPos--;
+                    }
+                    fixedXml.insert(insertPos, ">");
+                    tagEnd = insertPos;
+                    cout << "Finished adding missing close bracket at line: " << lineNum << "\n";
+                }
+            }
+            
+            string tagContent = fixedXml.substr(i + 1, tagEnd - i - 1);
+            
+            // fix 2: malformed XML declaration
+            if (tagContent[0] == '?') {
+                if (tagContent.back() != '?') {
+                    cout << "Malformed XML declaration found\n";
+                    fixedXml.insert(tagEnd, "?");
+                    tagEnd++;
+                    cout << "Fixed Malformed XML declaration\n";
+                }
+                i = tagEnd + 1;
+                continue;
+            }
+            
+            // skip comments and self-closing tags
+            if (tagContent[0] == '!' || tagContent.back() == '/') {
+                cout << "skip comments and self-closing tags\n";
+                i = tagEnd + 1;
+                continue;
+            }
+            
+            // handle closing tags
+            if (tagContent[0] == '/') {
+                string closingTag = tagContent.substr(1);
+                int spaceIndex = closingTag.find(' ');
+                if (spaceIndex != string::npos) {
+                    closingTag = closingTag.substr(0, spaceIndex);
+                }
+                
+                // fix 3: extra closing tag without opening tag
+                if (tagStack.empty()) {
+                    // remove the extra closing tag
+                    fixedXml.erase(i, tagEnd - i + 1);
+                    continue;  // don't increment i, as we removed characters
+                }
+                
+                string expectedTag = tagStack.top();
+                
+                // fix 4: mismatched closing tag
+                if (expectedTag != closingTag) {
+                    // replace wrong closing tag with correct one
+                    string correctClosing = "</" + expectedTag + ">";
+                    fixedXml.replace(i, tagEnd - i + 1, correctClosing);
+                    tagEnd = i + correctClosing.length() - 1;
+                }
+                
+                tagStack.pop();
+                if (!tagPositions.empty()) {
+                    tagPositions.pop();
+                }
+            } 
+            // handle opening tags
+            else {
+                string openTag = tagContent;
+                int spaceIndex = openTag.find(' ');
+                if (spaceIndex != string::npos) {
+                    openTag = openTag.substr(0, spaceIndex);
+                }
+                tagStack.push(openTag);
+                tagPositions.push(tagEnd + 1);
+            }
+            
+            i = tagEnd + 1;
+        } else if (fixedXml[i] == '>') {
+            // check if this '>' has a matching '<' before it
+            bool hasMatchingOpen = false;
+            int searchPos = i - 1;
+    
+            // search backwards for '<'
+            while (searchPos >= 0 && fixedXml[searchPos] != '<') {
+                if (fixedXml[searchPos] == '<') {
+                    hasMatchingOpen = true;
+                    break;
+                }
+                if (fixedXml[searchPos] == '>') {
+                    // found another '>' first, so this '>' is orphaned
+                    break;
+                }
+                searchPos--;
+            }
+    
+            if (!hasMatchingOpen) {
+                cout << "Missing '<' for '>' at line: " << lineNum << "\n";
+                bool isClosingTag = false;
+        
+                // find where tag name starts (backwards from '>')
+                int tagStart = i - 1;
+                while (tagStart > 0 && 
+                        fixedXml[tagStart] != '\n' &&
+                        fixedXml[tagStart] != '>' &&
+                        fixedXml[tagStart] != '<' &&
+                        fixedXml[tagStart] != '/') {
+                    tagStart--;
+                }
+                // Move forward to the first non-whitespace character after the found position and stop at '/' if encountered
+                while (tagStart < i && 
+                        (fixedXml[tagStart] == ' ' ||
+                        fixedXml[tagStart] == '\t' ||
+                        fixedXml[tagStart] == '\n' ||
+                        fixedXml[tagStart] == '/')) {
+                    if(fixedXml[tagStart] == '/') {
+                        // if we hit a '/' before finding '<', it means it's a closing tag
+                        // so we should insert '<' before the '/'
+                        isClosingTag = true;
+                        break;
+                    } else {
+                        tagStart++;
+                    }
+                }
+        
+                fixedXml.insert(tagStart, "<");
+                i++; // Adjust position after insertion
+
+                // push open tag in stack
+                if (!isClosingTag) {
+                    // extract tag name
+                    int tagEnd = fixedXml.find_first_of('>', tagStart);
+                    string tagContent = fixedXml.substr(tagStart + 1, tagEnd - tagStart - 1);
+                    int spaceIndex = tagContent.find(' ');
+                    if (spaceIndex != string::npos) {
+                        tagContent = tagContent.substr(0, spaceIndex);
+                    }
+                    tagStack.push(tagContent);
+                    tagPositions.push(tagEnd + 1);
+                } else {
+                    // it's a closing tag, so pop from stack
+                    if (!tagStack.empty()) {
+                        tagStack.pop();
+                        if (!tagPositions.empty()) {
+                            tagPositions.pop();
+                        }
+                    }
+                }
+        
+                cout << "Added missing '<'\n";
+            }
+            i++;
+        } else {
+            i++;
+        }
+    }
+    
+    // fix 5: add missing closing tags at the end
+    while (!tagStack.empty()) {
+        cout << "Adding missing closing tag for <" << tagStack.top() << ">\n";
+        string missingTag = tagStack.top();
+        tagStack.pop();
+        fixedXml += "</" + missingTag + ">";
+    }
+
+    if(fixedXml == xml) {
+        cout << "No fixes were necessary.\n";
+    } else {
+        cout << "Fixing complete.\n";
+    }
+    
+    return fixedXml;
 }
 
 string format(const string &xml)
@@ -562,11 +825,6 @@ string decompress(const string &xml)
 }
 
 string draw(const string &xml)
-{
-    return "";
-}
-
-string fixation(const string &xml)
 {
     return "";
 }

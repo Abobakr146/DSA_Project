@@ -75,9 +75,14 @@ g++ xml_editor.cpp external/tinyxml2/tinyxml2.cpp -Iexternal/tinyxml2 graph.cpp 
 
 ### For Windows (PowerShell / CMD)
 
-- Verify XML
+- Verify XML (no fix)
 ```
 .\xml_editor.exe verify -i input_file.xml -o output_file.xml
+```
+
+- Verify XML (and fix)
+```
+.\xml_editor verify -i input_file.xml -f -o output_file.xml
 ```
 
 - Format (Prettify)
@@ -113,9 +118,14 @@ g++ xml_editor.cpp external/tinyxml2/tinyxml2.cpp -Iexternal/tinyxml2 graph.cpp 
 
 ### For Linux / macOS / Unix
 
-- Verify XML
+- Verify XML (no fix)
 ```
 ./xml_editor verify -i input_file.xml -o output_file.xml
+```
+
+- Verify XML (and fix)
+```
+./xml_editor verify -i input_file.xml -f -o output_file.xml
 ```
 
 - Format (Prettify)
