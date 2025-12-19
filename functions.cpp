@@ -955,46 +955,76 @@ string mutual(const string &xml)
     return "";
 }
 
+
 string suggest(const string &xml, int userId)
 {
-    Graph graph = buildGraphFromXML(xml);
+    Graph followersGraph = buildGraphFromXML(xml);
     string result;
 
-    // Check if user exists in the graph
-    if (graph.find(userId) == graph.end())
+    Graph followingGraph;
+
+    for (const auto &entry : followersGraph)
+    {
+        int followedUser = entry.first;
+        const vector<int> &followers = entry.second;
+
+        for (int follower : followers)
+        {
+            followingGraph[follower].push_back(followedUser);
+        }
+    }
+
+    if (followingGraph.find(userId) == followingGraph.end())
     {
         return result;
     }
 
-    const vector<int> &myFollowers = graph.at(userId);
+    const vector<int> &myFollowing = followingGraph[userId];
 
-    for (const auto &[otherUser, theirFollowers] : graph)
+    unordered_map<int, bool> alreadyFollowing;
+    for (int id : myFollowing)
     {
-        if (otherUser == userId)
-            continue;
+        alreadyFollowing[id] = true;
+    }
+    alreadyFollowing[userId] = true; 
 
-        // Check for mutual followers
-        int mutualCount = 0;
-        for (int myF : myFollowers)
+    map<int, int> candidateScores;
+
+    for (int friendId : myFollowing)
+    {
+        if (followingGraph.find(friendId) != followingGraph.end())
         {
-            for (int theirF : theirFollowers)
+            const vector<int> &friendsFollowing = followingGraph[friendId];
+            for (int candidateId : friendsFollowing)
             {
-                if (myF == theirF)
+                if (alreadyFollowing.find(candidateId) == alreadyFollowing.end())
                 {
-                    mutualCount++;
-                    break;
+                    candidateScores[candidateId]++;
                 }
             }
         }
+    }
 
-        if (mutualCount > 0)
-        {
-            result += to_string(otherUser) + "\n";
-        }
+    vector<pair<int, int>> sortedCandidates;
+    for (const auto &entry : candidateScores)
+    {
+        sortedCandidates.push_back(entry);
+    }
+
+    sort(sortedCandidates.begin(), sortedCandidates.end(),
+         [](const pair<int, int> &a, const pair<int, int> &b)
+         {
+             return a.second > b.second; // Higher score first
+         });
+
+    for (const auto &candidate : sortedCandidates)
+    {
+        result += to_string(candidate.first) + "\n";
     }
 
     return result;
 }
+
 string search(const string &xml)
 {
     return "";
