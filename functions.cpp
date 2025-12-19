@@ -470,9 +470,120 @@ string fixation(const string &xml) {
     return fixedXml;
 }
 
+string trim_copy(const string &s)
+{
+    size_t a = 0, b = s.size();
+    while (a < b && isspace((unsigned char)s[a])) a++;
+    while (b > a && isspace((unsigned char)s[b - 1])) b--;
+    return s.substr(a, b - a);
+}
+
+string extract_tag_name(const string &tag)
+{
+    size_t i = 0;
+    if (tag[i] == '/') i++;
+    while (i < tag.size() && isspace((unsigned char)tag[i])) i++;
+
+    size_t start = i;
+    while (i < tag.size() && !isspace((unsigned char)tag[i]) && tag[i] != '/')
+        i++;
+
+    return tag.substr(start, i - start);
+}
+
+
 string format(const string &xml)
 {
-    return "";
+    string out;
+    stack<string> st;
+    const string indent = "  ";
+    size_t i = 0, n = xml.size();
+
+    while (i < n) {
+
+        // skip whitespace
+        if (isspace((unsigned char)xml[i])) {
+            i++;
+            continue;
+        }
+
+        // ================= OPENING TAG =================
+        if (xml[i] == '<' && i + 1 < n && xml[i + 1] != '/') {
+
+            // find tag end
+            size_t j = xml.find('>', i);
+            string tag = xml.substr(i, j - i + 1);
+            string tagContent = xml.substr(i + 1, j - i - 1);
+
+            string tagName = extract_tag_name(tagContent);
+
+            // look ahead for INLINE case
+            size_t textStart = j + 1;
+            size_t nextTag = xml.find('<', textStart);
+
+            bool inlineCase = false;
+            string text;
+
+            if (nextTag != string::npos &&
+                xml.compare(nextTag, 2, "</") == 0) {
+
+                text = trim_copy(xml.substr(textStart, nextTag - textStart));
+
+                size_t closeEnd = xml.find('>', nextTag);
+                string closingName = extract_tag_name(
+                    xml.substr(nextTag + 2, closeEnd - nextTag - 2));
+
+                if (!text.empty() && closingName == tagName)
+                    inlineCase = true;
+            }
+
+            // INLINE TAG
+            if (inlineCase) {
+                for (size_t k = 0; k < st.size(); k++) out += indent;
+                out += "<" + tagName + ">" + text + "</" + tagName + ">\n";
+
+                // skip text + closing tag
+                i = xml.find('>', nextTag) + 1;
+                continue;
+            }
+
+            // NORMAL OPENING TAG
+            for (size_t k = 0; k < st.size(); k++) out += indent;
+            out += tag + "\n";
+            st.push(tagName);
+
+            i = j + 1;
+            continue;
+        }
+
+        // ================= CLOSING TAG =================
+        if (xml[i] == '<' && i + 1 < n && xml[i + 1] == '/') {
+            size_t j = xml.find('>', i);
+            string tag = xml.substr(i, j - i + 1);
+
+            if (!st.empty()) st.pop();
+
+            for (size_t k = 0; k < st.size(); k++) out += indent;
+            out += tag + "\n";
+
+            i = j + 1;
+            continue;
+        }
+
+        // ================= MULTI-LINE TEXT =================
+        size_t nextTag = xml.find('<', i);
+        if (nextTag == string::npos) nextTag = n;
+
+        string text = trim_copy(xml.substr(i, nextTag - i));
+        if (!text.empty()) {
+            for (size_t k = 0; k < st.size(); k++) out += indent;
+            out += text + "\n";
+        }
+
+        i = nextTag;
+    }
+
+    return out;
 }
 
 // Helper to generate indentation spaces based on depth

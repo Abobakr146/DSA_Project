@@ -35,6 +35,8 @@ string bytesToString(const vector<unsigned char> &bytes);
 
 // --- XML Processing Functions ---
 string verify(const string &xml);
+string trim_copy(const string& s);
+string extract_tag_name(const string& tag);
 string format(const string &xml);
 string json(const string &xml);
 string mini(const string &xml);
