@@ -8,7 +8,8 @@ int main(int argc, char* argv[]) {
     string xml_content;
     string operation;
     bool fix = false;
-    
+    int userId = -1;
+
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
@@ -20,6 +21,10 @@ int main(int argc, char* argv[]) {
         else if (arg == "-o" && i + 1 < argc) {
             output_path = argv[i + 1];
             i++; 
+        }
+        else if (arg == "-id" && i + 1 < argc){
+            userId = stoi(argv[i + 1]);
+            i++;
         }
         else if (arg == "-f") {
             fix = true;
@@ -81,6 +86,16 @@ int main(int argc, char* argv[]) {
     }
     else if(operation == "decompress") {
         updated_xml = decompress(xml_content);
+    }
+    else if (operation == "suggest"){
+        if (userId == -1)
+        {
+            cerr << "Error: User ID (-id) is required for suggest operation." << endl;
+            return 1;
+        }
+        updated_xml = suggest(xml_content, userId);
+        cout << "Suggested users for User " << userId << ":" << endl;
+        cout << updated_xml;
     }
 
     // Write output file (binary for compress, text for everything else)

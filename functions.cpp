@@ -1,5 +1,5 @@
 #include "functions.h"
-
+#include "graph.h"
 using namespace std;
 
 // Global BPE Dictionary
@@ -592,14 +592,14 @@ string getIndent(int level)
     return string(level * 4, ' '); // 4 spaces per level
 }
 
-struct XMLNode
+struct JsonXMLNode
 {
     string name;
     string content;
-    vector<XMLNode *> children;
-    XMLNode(string n) : name(n), content("") {} // new way to implement the constructor, it will intialize the values while making the object
+    vector<JsonXMLNode *> children;
+    JsonXMLNode(string n) : name(n), content("") {} // new way to implement the constructor, it will intialize the values while making the object
 
-    ~XMLNode()
+    ~JsonXMLNode()
     {
         for (auto child : children)
         {
@@ -617,10 +617,10 @@ string trim(const string &str)
     return str.substr(first, (last - first + 1));
 }
 
-XMLNode *parseXML(const string &xml)
+JsonXMLNode *parseXML(const string &xml)
 {
-    XMLNode *root = nullptr;
-    stack<XMLNode *> nodeStack;
+    JsonXMLNode *root = nullptr;
+    stack<JsonXMLNode *> nodeStack;
     size_t pos = 0;
     while (pos < xml.length())
     {
@@ -650,7 +650,7 @@ XMLNode *parseXML(const string &xml)
         {
             string tagName = tagContent;
 
-            XMLNode *newNode = new XMLNode(tagName);
+            JsonXMLNode *newNode = new JsonXMLNode(tagName);
 
             if (nodeStack.empty())
             {
@@ -671,7 +671,7 @@ XMLNode *parseXML(const string &xml)
     return root;
 }
 
-void nodeToJSON(XMLNode *node, stringstream &ss, int level)
+void nodeToJSON(JsonXMLNode *node, stringstream &ss, int level)
 {
     if (!node)
         return;
@@ -686,7 +686,7 @@ void nodeToJSON(XMLNode *node, stringstream &ss, int level)
     // Case 2: It's an object (has children)
     ss << "{\n";
 
-    map<string, vector<XMLNode *>> groups;
+    map<string, vector<JsonXMLNode *>> groups;
     vector<string> order;
 
     // Group children by tag name to handle arrays
@@ -743,7 +743,7 @@ void nodeToJSON(XMLNode *node, stringstream &ss, int level)
 
 string json(const string &xml)
 {
-    XMLNode *root = parseXML(xml);
+    JsonXMLNode *root = parseXML(xml);
     if (!root)
         return "{}";
 
@@ -955,11 +955,46 @@ string mutual(const string &xml)
     return "";
 }
 
-string suggest(const string &xml)
+string suggest(const string &xml, int userId)
 {
-    return "";
-}
+    Graph graph = buildGraphFromXML(xml);
+    string result;
 
+    // Check if user exists in the graph
+    if (graph.find(userId) == graph.end())
+    {
+        return result;
+    }
+
+    const vector<int> &myFollowers = graph.at(userId);
+
+    for (const auto &[otherUser, theirFollowers] : graph)
+    {
+        if (otherUser == userId)
+            continue;
+
+        // Check for mutual followers
+        int mutualCount = 0;
+        for (int myF : myFollowers)
+        {
+            for (int theirF : theirFollowers)
+            {
+                if (myF == theirF)
+                {
+                    mutualCount++;
+                    break;
+                }
+            }
+        }
+
+        if (mutualCount > 0)
+        {
+            result += to_string(otherUser) + "\n";
+        }
+    }
+
+    return result;
+}
 string search(const string &xml)
 {
     return "";

@@ -47,7 +47,7 @@ string fixation(const string &xml);
 string most_active(const string &xml);
 string most_influencer(const string &xml);
 string mutual(const string &xml);
-string suggest(const string &xml);
+string suggest(const string &xml, int userId);
 string search(const string &xml);
 
 #endif
