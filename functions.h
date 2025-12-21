@@ -23,6 +23,21 @@ struct DictionaryEntry
     unsigned char second;
 };
 
+// Class for posts
+class Post {
+private:
+    vector<string> post_Topics;
+    string post_Content;
+    
+public:
+    // Constructor declaration
+    Post(vector<string> topics, string content);
+    
+    // Method declarations
+    vector<string> getTopics();
+    string getContent();
+};
+
 // Global container to store the replacement dictionary
 extern vector<DictionaryEntry> BPE_DICTIONARY;
 
@@ -48,6 +63,6 @@ string most_active(const string &xml);
 string most_influencer(const string &xml);
 string mutual(const string &xml);
 string suggest(const string &xml, int userId);
-string search(const string &xml);
+vector<Post> searchByTopic(const string &xml, const string &topic);
 
 #endif

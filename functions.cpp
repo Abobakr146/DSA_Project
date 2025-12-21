@@ -2,6 +2,22 @@
 #include "graph.h"
 using namespace std;
 
+// ==================== Implement Post class functions ====================
+// Constructor implementation
+Post::Post(vector<string> topics, string content) {
+    post_Topics = topics;
+    post_Content = content;
+}
+
+// Method implementations
+vector<string> Post::getTopics() {
+    return post_Topics;
+}
+
+string Post::getContent() {
+    return post_Content;
+}
+
 // Global BPE Dictionary
 vector<DictionaryEntry> BPE_DICTIONARY;
 
@@ -1084,7 +1100,42 @@ string suggest(const string &xml, int userId)
     return result;
 }
 
-string search(const string &xml)
-{
-    return "";
+vector<Post> searchByTopic(const string &xml, const string &topic) {
+    vector<Post> posts;
+    int pos = 0;
+    while ((pos = xml.find("<post>", pos)) != -1) {
+        vector<string> topics;
+        bool topicFound = false;
+        int endPost = xml.find("</post>", pos);
+        if (endPost == -1) break;
+        string postBlock = xml.substr(pos, endPost - pos);
+
+        // Extract Topics
+        int topicPos = 0;
+        while ((topicPos = postBlock.find("<topic>", topicPos)) != -1) {
+            int topicEnd = postBlock.find("</topic>", topicPos);
+            if (topicEnd == -1) break;
+            string postTopic = postBlock.substr(topicPos + 7, topicEnd - topicPos - 7); // 7 is length of <topic>
+            postTopic = trim(postTopic); // remove leading/trailing whitespace and newlines
+            topics.push_back(postTopic);
+            topicPos = topicEnd + 8; // move past </topic>
+            if(postTopic.find(topic) != string::npos || (topic == "all")){
+                topicFound = true;
+            }
+        }
+
+        if(!topicFound){
+            pos = endPost + 7; // move past </post>
+            continue; // skip this post
+        }
+
+        // Extract Content
+        int contentStart = postBlock.find("<body>") + 6; // 6 is length of <body>
+        int contentEnd = postBlock.find("</body>");
+        string postContent = postBlock.substr(contentStart, contentEnd - contentStart);
+        postContent = trim(postContent); // remove leading/trailing whitespace and newlines
+        posts.push_back(Post(topics, postContent));
+        pos = endPost + 7; // move past </post>
+    }
+    return posts;
 }
