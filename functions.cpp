@@ -947,12 +947,11 @@ string most_active(const string &xml)
 
 string most_influencer(const string &xml)
 {
-      string influencerId, influencerName;
+      vector<User> topUsers;
     int maxFollowers = -1;
 
     int i = 0;
     while (i < xml.length()) {
-        // Look for <user>
         if (xml.substr(i, 6) == "<user>") {
             i += 6;
 
@@ -962,41 +961,35 @@ string most_influencer(const string &xml)
             bool idRead = false;
             bool nameRead = false;
 
-            // Read until </user>
             while (!(xml.substr(i, 7) == "</user>")) {
-                // Read the first <id> for user only
                 if (!idRead && xml.substr(i, 4) == "<id>") {
                     i += 4;
                     while (!(xml.substr(i, 5) == "</id>")) {
                         id += xml[i++];
                     }
-                    i += 5; // skip </id>
-                    idRead = true; // mark user ID as read
-                }
-                // Read the first <name> for user only
-                else if (!nameRead && xml.substr(i, 6) == "<name>") {
+                    i += 5;
+                    idRead = true;
+                } else if (!nameRead && xml.substr(i, 6) == "<name>") {
                     i += 6;
                     while (!(xml.substr(i, 7) == "</name>")) {
                         name += xml[i++];
                     }
-                    i += 7; // skip </name>
-                    nameRead = true; // mark name as read
-                }
-                // Count followers
-                else if (xml.substr(i, 10) == "<follower>") {
+                    i += 7;
+                    nameRead = true;
+                } else if (xml.substr(i, 10) == "<follower>") {
                     followerCount++;
-                    i += 10; // skip <follower>
-                }
-                else {
+                    i += 10;
+                } else {
                     i++;
                 }
             }
 
-            // Update most influential user
             if (followerCount > maxFollowers) {
+                topUsers.clear();
+                topUsers.push_back({id, name});
                 maxFollowers = followerCount;
-                influencerId = id;
-                influencerName = name;
+            } else if (followerCount == maxFollowers) {
+                topUsers.push_back({id, name});
             }
 
             i += 7; // skip </user>
@@ -1005,7 +998,15 @@ string most_influencer(const string &xml)
         }
     }
 
-    return "ID: " + influencerId + ", Name: " + influencerName;
+    // Convert vector of users to single string
+    string result;
+    for (size_t j = 0; j < topUsers.size(); j++) {
+        result += "ID: " + topUsers[j].id + ", Name: " + topUsers[j].name;
+        if (j != topUsers.size() - 1)
+            result += " | ";  // separator between users
+    }
+
+    return result;
 }
 
 string mutual(const string &xml)
