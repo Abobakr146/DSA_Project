@@ -947,7 +947,44 @@ string most_active(const string &xml)
 
 string most_influencer(const string &xml)
 {
-    return "";
+    int pos = 0;
+    string influencerId, influencerName;
+    int maxFollowers = -1;
+
+    while ((pos = xml.find("<user>", pos)) != -1) {
+        int endUser = xml.find("</user>", pos);
+        if (endUser == -1) break;
+        string userBlock = xml.substr(pos, endUser - pos);
+
+        // Extract ID
+        int idStart = userBlock.find("<id>") + 4;
+        int idEnd = userBlock.find("</id>");
+        string id = userBlock.substr(idStart, idEnd - idStart);
+
+        // Extract Name
+        int nameStart = userBlock.find("<name>") + 6;
+        int nameEnd = userBlock.find("</name>");
+        string name = userBlock.substr(nameStart, nameEnd - nameStart);
+
+        // Count followers
+        int followerCount = 0;
+        int fPos = 0;
+        while ((fPos = userBlock.find("<follower>", fPos)) != -1) {
+            followerCount++;
+            fPos += 10; // move past <follower>
+        }
+
+        // Check if this user has the most followers
+        if (followerCount > maxFollowers) {
+            maxFollowers = followerCount;
+            influencerId = id;
+            influencerName = name;
+        }
+
+        pos = endUser + 7; // move past </user>
+    }
+
+    return "ID: " + influencerId + ", Name: " + influencerName;
 }
 
 string mutual(const string &xml)
