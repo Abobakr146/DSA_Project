@@ -947,41 +947,62 @@ string most_active(const string &xml)
 
 string most_influencer(const string &xml)
 {
-    int pos = 0;
-    string influencerId, influencerName;
+      string influencerId, influencerName;
     int maxFollowers = -1;
 
-    while ((pos = xml.find("<user>", pos)) != -1) {
-        int endUser = xml.find("</user>", pos);
-        if (endUser == -1) break;
-        string userBlock = xml.substr(pos, endUser - pos);
+    int i = 0;
+    while (i < xml.length()) {
+        // Look for <user>
+        if (xml.substr(i, 6) == "<user>") {
+            i += 6;
 
-        // Extract ID
-        int idStart = userBlock.find("<id>") + 4;
-        int idEnd = userBlock.find("</id>");
-        string id = userBlock.substr(idStart, idEnd - idStart);
+            string id = "";
+            string name = "";
+            int followerCount = 0;
+            bool idRead = false;
+            bool nameRead = false;
 
-        // Extract Name
-        int nameStart = userBlock.find("<name>") + 6;
-        int nameEnd = userBlock.find("</name>");
-        string name = userBlock.substr(nameStart, nameEnd - nameStart);
+            // Read until </user>
+            while (!(xml.substr(i, 7) == "</user>")) {
+                // Read the first <id> for user only
+                if (!idRead && xml.substr(i, 4) == "<id>") {
+                    i += 4;
+                    while (!(xml.substr(i, 5) == "</id>")) {
+                        id += xml[i++];
+                    }
+                    i += 5; // skip </id>
+                    idRead = true; // mark user ID as read
+                }
+                // Read the first <name> for user only
+                else if (!nameRead && xml.substr(i, 6) == "<name>") {
+                    i += 6;
+                    while (!(xml.substr(i, 7) == "</name>")) {
+                        name += xml[i++];
+                    }
+                    i += 7; // skip </name>
+                    nameRead = true; // mark name as read
+                }
+                // Count followers
+                else if (xml.substr(i, 10) == "<follower>") {
+                    followerCount++;
+                    i += 10; // skip <follower>
+                }
+                else {
+                    i++;
+                }
+            }
 
-        // Count followers
-        int followerCount = 0;
-        int fPos = 0;
-        while ((fPos = userBlock.find("<follower>", fPos)) != -1) {
-            followerCount++;
-            fPos += 10; // move past <follower>
+            // Update most influential user
+            if (followerCount > maxFollowers) {
+                maxFollowers = followerCount;
+                influencerId = id;
+                influencerName = name;
+            }
+
+            i += 7; // skip </user>
+        } else {
+            i++;
         }
-
-        // Check if this user has the most followers
-        if (followerCount > maxFollowers) {
-            maxFollowers = followerCount;
-            influencerId = id;
-            influencerName = name;
-        }
-
-        pos = endUser + 7; // move past </user>
     }
 
     return "ID: " + influencerId + ", Name: " + influencerName;
