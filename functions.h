@@ -64,5 +64,6 @@ string most_influencer(const string &xml);
 string mutual(const string &xml);
 string suggest(const string &xml, int userId);
 vector<Post> searchByTopic(const string &xml, const string &topic);
+vector<Post> searchByWord(const string &xml, const string &word);
 
 #endif
