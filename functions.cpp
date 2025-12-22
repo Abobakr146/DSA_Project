@@ -1030,7 +1030,60 @@ string most_influencer(const string &xml)
 
 string mutual(const string &xml)
 {
-    return "";
+    map<int, vector<int>> followers;
+
+    // --------- PARSE XML ---------
+    size_t pos = 0;
+    while ((pos = xml.find("<user>", pos)) != string::npos) {
+
+        size_t idStart = xml.find("<id>", pos) + 4;
+        size_t idEnd   = xml.find("</id>", idStart);
+        int userId = stoi(xml.substr(idStart, idEnd - idStart));
+
+        size_t followersStart = xml.find("<followers>", pos);
+        size_t followersEnd   = xml.find("</followers>", followersStart);
+
+        size_t fpos = followersStart;
+        while ((fpos = xml.find("<follower>", fpos)) != string::npos &&
+               fpos < followersEnd) {
+
+            size_t fStart = fpos + 10;
+            size_t fEnd   = xml.find("</follower>", fStart);
+            int followerId = stoi(xml.substr(fStart, fEnd - fStart));
+
+            followers[userId].push_back(followerId);
+            fpos = fEnd;
+        }
+
+        pos = idEnd;
+    }
+
+    // --------- FIND MUTUAL FOLLOWERS OF 1, 2, 3 ---------
+    vector<int> ids = {1, 2, 3};
+    vector<int> result = followers[ids[0]];
+
+    for (int i = 1; i < ids.size(); i++) {
+        vector<int> temp;
+        for (int u : result) {
+            if (find(followers[ids[i]].begin(),
+                     followers[ids[i]].end(),
+                     u) != followers[ids[i]].end()) {
+                temp.push_back(u);
+            }
+        }
+        result = temp;
+    }
+
+    // --------- FORMAT OUTPUT ---------
+    if (result.empty())
+        return "No mutual followers found.";
+
+    stringstream out;
+    out << "Mutual followers between users 1, 2, and 3:\n";
+    for (int u : result)
+        out << "User ID: " << u << "\n";
+
+    return out.str();
 }
 
 
