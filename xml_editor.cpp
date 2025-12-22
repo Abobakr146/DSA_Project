@@ -4,11 +4,14 @@
 
 int main(int argc, char* argv[]) {
     string input_path;
-    string output_path;
+    string output_path = "output.xml";
     string xml_content;
     string operation;
     bool fix = false;
     int userId = -1;
+    string post_seach;
+    bool isWord; // true => word, false => topic
+    vector<string> s_posts;
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -29,9 +32,20 @@ int main(int argc, char* argv[]) {
         else if (arg == "-f") {
             fix = true;
         }
+        else if (arg == "-w") {
+            post_seach = argv[i+1];
+            i++;
+            isWord = true;
+        }
+        else if (arg == "-t") {
+            post_seach = argv[i+1];
+            i++;
+            isWord = false;
+        }
         else if (i == 1) {
             operation = arg;
         }
+        
     }
 
     // Validate input
@@ -97,6 +111,21 @@ int main(int argc, char* argv[]) {
         cout << "Suggested users for User " << userId << ":" << endl;
         cout << updated_xml;
     }
+    else if (operation == "search")
+    {
+        if (isWord == false) {
+            s_posts = searchPostsByTopic(xml_content, post_seach);
+        }
+        else {
+            s_posts = searchPostsByWord(xml_content, post_seach);
+        }
+
+        for (auto& post : s_posts) {
+            updated_xml += post;
+            updated_xml += "\n";
+        }
+    }
+    
 
     // Write output file (binary for compress, text for everything else)
     bool writeSuccess;

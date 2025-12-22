@@ -1,0 +1,112 @@
+{
+    "users": {
+        "user": [
+            {
+                "id": "1",
+                "name": "Alice",
+                "posts": {
+                    "post": [
+                        {
+                            "body": "Hello world, I love coding in C++!",
+                            "topics": {
+                                "topic": [
+                                    "programming",
+                                    "tech"
+                                ]
+                            }
+                        },
+                        {
+                            "body": "Hello world, I love coding in C too!",
+                            "topics": {
+                                "topic": [
+                                    "programming",
+                                    "tech"
+                                ]
+                            }
+                        },
+                        {
+                            "body": "Data structures are fascinating.",
+                            "topics": {
+                                "topic": "education"
+                            }
+                        }
+                    ]
+                },
+                "followers": {
+                    "follower": [
+                        {
+                            "id": "2"
+                        },
+                        {
+                            "id": "3"
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "2",
+                "name": "Bob",
+                "posts": {
+                    "post": {
+                        "body": "The weather is great today.",
+                        "topics": {
+                            "topic": "weather"
+                        }
+                    }
+                },
+                "followers": {
+                    "follower": [
+                        {
+                            "id": "1"
+                        },
+                        {
+                            "id": "3"
+                        },
+                        {
+                            "id": "4"
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "3",
+                "name": "Charlie",
+                "posts": {
+                    "post": {
+                        "body": "Anyone want to discuss XML parsing?",
+                        "topics": {
+                            "topic": "programming"
+                        }
+                    }
+                },
+                "followers": {
+                    "follower": [
+                        {
+                            "id": "1"
+                        },
+                        {
+                            "id": "2"
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "4",
+                "name": "David",
+                "posts": {
+                    "post": {
+                        "body": "Learning about Graph theory today.",
+                        "topics": {
+                            "topic": "math"
+                        }
+                    }
+                },
+                "followers": {
+                    "follower": {
+                        "id": "2"
+                    }
+                }
+            }
+        ]
+    }
+}

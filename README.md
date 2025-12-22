@@ -77,32 +77,32 @@ g++ xml_editor.cpp external/tinyxml2/tinyxml2.cpp -Iexternal/tinyxml2 graph.cpp 
 
 - Verify XML (no fix)
 ```
-.\xml_editor.exe verify -i input_file.xml -o output_file.xml
+.\xml_editor.exe verify -i full_test.xml -o output_file.xml
 ```
 
 - Verify XML (and fix)
 ```
-.\xml_editor verify -i input_file.xml -f -o output_file.xml
+.\xml_editor verify -i full_test.xml -f -o output_file.xml
 ```
 
 - Format (Prettify)
 ```
-.\xml_editor.exe format -i input_file.xml -o output_file.xml
+.\xml_editor.exe format -i full_test.xml -o output_file.xml
 ```
 
 - Convert to JSON
 ```
-.\xml_editor.exe json -i input_file.xml -o output_file.json
+.\xml_editor.exe json -i full_test.xml -o output_file.json
 ```
 
 - Minify
 ```
-.\xml_editor.exe mini -i input_file.xml -o output_file.xml
+.\xml_editor.exe mini -i full_test.xml -o output_file.xml
 ```
 
 - Compress
 ```
-.\xml_editor.exe compress -i input_file.xml -o output_file.comp
+.\xml_editor.exe compress -i full_test.xml -o output_file.comp
 ```
 
 - Decompress
@@ -113,39 +113,49 @@ g++ xml_editor.cpp external/tinyxml2/tinyxml2.cpp -Iexternal/tinyxml2 graph.cpp 
 - Draw Network (Requires Graphviz)
 ```
 .\xml_editor.exe draw -i input_test_draw.xml -o output_file.jpg
-.\xml_editor.exe draw -i input_file.xml -o output_file.jpg
+.\xml_editor.exe draw -i full_test.xml -o output_file.jpg
+```
+
+- search by word
+```
+.\xml_editor.exe search -w word -i full_test.xml -o output_file.jpg
+```
+
+- search by topic
+```
+.\xml_editor.exe search -t topic -i full_test.xml -o output_file.jpg
 ```
 
 ### For Linux / macOS / Unix
 
 - Verify XML (no fix)
 ```
-./xml_editor verify -i input_file.xml -o output_file.xml
+./xml_editor verify -i full_test.xml -o output_file.xml
 ```
 
 - Verify XML (and fix)
 ```
-./xml_editor verify -i input_file.xml -f -o output_file.xml
+./xml_editor verify -i full_test.xml -f -o output_file.xml
 ```
 
 - Format (Prettify)
 ```
-./xml_editor format -i input_file.xml -o output_file.xml
+./xml_editor format -i full_test.xml -o output_file.xml
 ```
 
 - Convert to JSON
 ```
-./xml_editor json -i input_file.xml -o output_file.json
+./xml_editor json -i full_test.xml -o output_file.json
 ```
 
 - Minify
 ```
-./xml_editor mini -i input_file.xml -o output_file.xml
+./xml_editor mini -i full_test.xml -o output_file.xml
 ```
 
 - Compress
 ```
-./xml_editor compress -i input_file.xml -o output_file.comp
+./xml_editor compress -i full_test.xml -o output_file.comp
 ```
 
 - Decompress
@@ -156,5 +166,15 @@ g++ xml_editor.cpp external/tinyxml2/tinyxml2.cpp -Iexternal/tinyxml2 graph.cpp 
 - Draw Network (Requires Graphviz)
 ```
 ./xml_editor draw -i input_test_draw.xml -o output_file.jpg
-./xml_editor draw -i input_file.xml -o output_file.jpg
+./xml_editor draw -i full_test.xml -o output_file.jpg
+```
+
+- search by word
+```
+./xml_editor.exe search -w word -i full_test.xml -o output_file.jpg
+```
+
+- search by topic
+```
+./xml_editor.exe search -t topic -i full_test.xml -o output_file.jpg
 ```

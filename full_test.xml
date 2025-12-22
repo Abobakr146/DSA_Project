@@ -1,0 +1,96 @@
+<users>
+    <user>
+        <id>1</id>
+        <name>Alice</name>
+        <posts>
+            <post>
+                <body>Hello world, I love coding in C++!</body>
+                <topics>
+                    <topic>programming</topic>
+                    <topic>tech</topic>
+                </topics>
+            </post>
+            <post>
+                <body>Hello world, I love coding in C too!</body>
+                <topics>
+                    <topic>programming</topic>
+                    <topic>tech</topic>
+                </topics>
+            </post>
+            <post>
+                <body>Data structures are fascinating.</body>
+                <topics>
+                    <topic>education</topic>
+                </topics>
+            </post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2</id>
+            </follower>
+            <follower>
+                <id>3</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2</id>
+        <name>Bob</name>
+        <posts>
+            <post>
+                <body>The weather is great today.</body>
+                <topics>
+                    <topic>weather</topic>
+                </topics>
+            </post>
+        </posts>
+        <followers>
+            <follower>
+                <id>1</id>
+            </follower>
+            <follower>
+                <id>3</id>
+            </follower>
+            <follower>
+                <id>4</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>3</id>
+        <name>Charlie</name>
+        <posts>
+            <post>
+                <body>Anyone want to discuss XML parsing?</body>
+                <topics>
+                    <topic>programming</topic>
+                </topics>
+            </post>
+        </posts>
+        <followers>
+            <follower>
+                <id>1</id>
+            </follower>
+            <follower>
+                <id>2</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>4</id>
+        <name>David</name>
+        <posts>
+            <post>
+                <body>Learning about Graph theory today.</body>
+                <topics>
+                    <topic>math</topic>
+                </topics>
+            </post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2</id>
+            </follower>
+        </followers>
+    </user>
+</users>

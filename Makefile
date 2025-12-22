@@ -16,8 +16,7 @@ OS = windows
 OUT_DIR = output
 
 # Define Output Files (All inside the output directory)
-INPUT_XML       = input_file.xml
-DRAW_INPUT      = input_test_draw.xml
+INPUT_XML       = full_test.xml
 
 VERIFY_OUTPUT   = $(OUT_DIR)/verify_file.xml
 FORMAT_OUTPUT   = $(OUT_DIR)/format_file.xml
@@ -27,6 +26,11 @@ JSON_FILE       = $(OUT_DIR)/output_file.json
 COMP_FILE       = $(OUT_DIR)/output_file.comp
 DRAW_OUTPUT     = $(OUT_DIR)/output_file.jpg
 TEMP_DOT        = temp_graph.dot
+SEARCH_W_OUTPUT = $(OUT_DIR)/search_word_file.xml
+SEARCH_T_OUTPUT = $(OUT_DIR)/search_topic_file.xml
+
+WORD = Hello
+TOPIC = education
 
 RM = rm -f
 RMDIR = rm -rf
@@ -47,7 +51,7 @@ endif
 # Main Targets
 # ---------------------------------------------------------
 
-all: build directories verify format convert minify compress decompress draw
+all: build directories verify format convert minify compress decompress draw searchword searchtopic
 	@echo "All tasks completed successfully. Check the '$(OUT_DIR)' folder."
 
 # Create the output directory
@@ -88,7 +92,15 @@ decompress: $(TARGET) directories
 
 draw: $(TARGET) directories
 	@echo "--- Drawing Network ---"
-	$(EXEC) draw -i $(DRAW_INPUT) -o $(DRAW_OUTPUT)
+	$(EXEC) draw -i $(INPUT_XML) -o $(DRAW_OUTPUT)
+
+searchword: $(TARGET) directories
+	@echo "--- Searching ---"
+	$(EXEC) search -w $(WORD) -i $(INPUT_XML) -o $(SEARCH_W_OUTPUT)
+
+searchtopic: $(TARGET) directories
+	@echo "--- Searching ---"
+	$(EXEC) search -t $(TOPIC) -i $(INPUT_XML) -o $(SEARCH_T_OUTPUT)
 
 # ---------------------------------------------------------
 # Clean

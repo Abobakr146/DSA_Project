@@ -1156,88 +1156,89 @@ string suggest(const string &xml, int userId)
     return result;
 }
 
-vector<Post> searchByTopic(const string &xml, const string &topic) {
-    vector<Post> posts;
-    int pos = 0;
-    while ((pos = xml.find("<post>", pos)) != -1) {
-        vector<string> topics;
-        bool topicFound = false;
-        int endPost = xml.find("</post>", pos);
-        if (endPost == -1) break;
-        string postBlock = xml.substr(pos, endPost - pos);
+vector<string> searchPostsByWord(const string& xml, const string& word) {
+    vector<string> results;
 
-        // Extract Topics
-        int topicPos = 0;
-        while ((topicPos = postBlock.find("<topic>", topicPos)) != -1) {
-            int topicEnd = postBlock.find("</topic>", topicPos);
-            if (topicEnd == -1) break;
-            string postTopic = postBlock.substr(topicPos + 7, topicEnd - topicPos - 7); // 7 is length of <topic>
-            postTopic = trim(postTopic); // remove leading/trailing whitespace and newlines
-            topics.push_back(postTopic);
-            topicPos = topicEnd + 8; // move past </topic>
-            if(postTopic.find(topic) != string::npos || (topic == "all")){
-                topicFound = true;
+    const string post_open  = "<post>";
+    const string post_close = "</post>";
+    const string body_open  = "<body>";
+    const string body_close = "</body>";
+
+    size_t pos = 0;
+
+    while (true) {
+        size_t post_start = xml.find(post_open, pos);
+        if (post_start == string::npos) break;
+
+        size_t post_end = xml.find(post_close, post_start);
+        if (post_end == string::npos) break;
+
+        string post_block = xml.substr(
+            post_start,
+            post_end - post_start
+        );
+
+        size_t body_start = post_block.find(body_open);
+        size_t body_end   = post_block.find(body_close);
+
+        if (body_start != string::npos &&
+            body_end   != string::npos &&
+            body_end > body_start) {
+
+            body_start += body_open.length();
+            string body = post_block.substr(
+                body_start,
+                body_end - body_start
+            );
+
+            if (body.find(word) != string::npos) {
+                results.push_back(body);
             }
         }
 
-        if(!topicFound){
-            pos = endPost + 7; // move past </post>
-            continue; // skip this post
-        }
-
-        // Extract Content
-        int contentStart = postBlock.find("<body>") + 6; // 6 is length of <body>
-        int contentEnd = postBlock.find("</body>");
-        string postContent = postBlock.substr(contentStart, contentEnd - contentStart);
-        postContent = trim(postContent); // remove leading/trailing whitespace and newlines
-        posts.push_back(Post(topics, postContent));
-        pos = endPost + 7; // move past </post>
+        pos = post_end + post_close.length();
     }
-    return posts;
+
+    return results;
 }
 
-vector<Post> searchByWord(const string &xml, const string &word){
-    vector<Post> posts;
-    int pos = 0;
-    while((pos = xml.find("<post>", pos)) != -1){
-        vector<string> topics;
-        string postContent;
-        bool wordFound = false;
+vector<string> searchPostsByTopic(const string& xml, const string& topic) {
+    vector<string> results;
 
-        int endPost = xml.find("</post>", pos);
-        if(endPost == -1) break;
-        string postBlock = xml.substr(pos, endPost - pos);
+    const string post_open  = "<post>";
+    const string post_close = "</post>";
+    const string body_open  = "<body>";
+    const string body_close = "</body>";
 
-        // Extract Content
-        int contentStart = postBlock.find("<body>") + 6; // 6 is length of <body>
-        int contentEnd = postBlock.find("</body>");
-        postContent = postBlock.substr(contentStart, contentEnd - contentStart);
+    const string topic_tag =
+        "<topic>" + topic + "</topic>";
 
-        postContent = trim(postContent); // remove leading/trailing whitespace and newlines
-        // Check if the desired word is present in content
-        if(postContent.find(word) != string::npos){
-            wordFound = true;
-        }
+    size_t pos = 0;
 
-        // Extract Topics First
-        int topicPos = 0;
-        while((topicPos = postBlock.find("<topic>", topicPos)) != -1){
-            int topicEnd = postBlock.find("</topic>", topicPos);
-            if(topicEnd == -1) break;
-            string postTopic = postBlock.substr(topicPos + 7, topicEnd - topicPos - 7); // 7 is length of <topic>
-            postTopic = trim(postTopic); // remove leading/trailing whitespace and newlines
-            topics.push_back(postTopic);
-            topicPos = topicEnd + 8; // move past </topic>   
-            // Check if the desired word is present in topic
-            if(!wordFound && postTopic.find(word) != string::npos){
-                wordFound = true;
+    while ((pos = xml.find(post_open, pos)) != string::npos) {
+        size_t post_end = xml.find(post_close, pos);
+        if (post_end == string::npos) break;
+
+        string post_block =
+            xml.substr(pos, post_end - pos);
+
+        if (post_block.find(topic_tag) != string::npos) {
+            size_t body_start = post_block.find(body_open);
+            size_t body_end   = post_block.find(body_close);
+
+            if (body_start != string::npos &&
+                body_end   != string::npos) {
+
+                body_start += body_open.length();
+                results.push_back(
+                    post_block.substr(body_start, body_end - body_start)
+                );
             }
         }
 
-        if(wordFound){
-            posts.push_back(Post(topics, postContent));
-        }
-        pos = endPost + 7; // move past </post>
+        pos = post_end + post_close.length();
     }
-    return posts;
+
+    return results;
 }
+
