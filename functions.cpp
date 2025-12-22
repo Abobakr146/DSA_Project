@@ -962,7 +962,10 @@ string most_active(const string &xml)
 }
 
 string most_influencer(const string &xml)
-{
+{    struct User {
+    string id;
+    string name;
+};
       vector<User> topUsers;
     int maxFollowers = -1;
 
