@@ -18,20 +18,22 @@ OUT_DIR = output
 # Define Output Files (All inside the output directory)
 INPUT_XML       = input_file.xml
 
-VERIFY_OUTPUT   = $(OUT_DIR)/verify_file.xml
-FORMAT_OUTPUT   = $(OUT_DIR)/format_file.xml
-MINIFY_OUTPUT   = $(OUT_DIR)/minify_file.xml
-DECOMP_OUTPUT   = $(OUT_DIR)/decompress_file.xml
-JSON_FILE       = $(OUT_DIR)/output_file.json
-COMP_FILE       = $(OUT_DIR)/output_file.comp
-DRAW_OUTPUT     = $(OUT_DIR)/output_file.jpg
+VERIFY   		= verify_file.xml
+FORMAT   		= format_file.xml
+MINIFY   		= minify_file.xml
+DECOMP   		= decompress_file.xml
+JSON       		= output_file.json
+COMP       		= output_file.comp
+DRAW     		= output_file.jpg
 TEMP_DOT        = temp_graph.dot
-SEARCH_W_OUTPUT = $(OUT_DIR)/search_word_file.xml
-SEARCH_T_OUTPUT = $(OUT_DIR)/search_topic_file.xml
-MOST_ACTIVE 	= $(OUT_DIR)/most_active_file.xml
-MOST_INFLUENCER = $(OUT_DIR)/most_influencer_file.xml
-SUGGEST 		= $(OUT_DIR)/suggest_file.xml
+SEARCH_W 		= search_word_file.xml
+SEARCH_T 		= search_topic_file.xml
+MOST_ACTIVE 	= most_active_file.xml
+MOST_INFLUENCER = most_influencer_file.xml
+MUTUAL 			= mutual_file.xml
+SUGGEST 		= suggest_file.xml
 
+FIX=1
 WORD = Hello
 TOPIC = education
 IDS=1,2,3
@@ -50,6 +52,7 @@ else
     EXEC = ./$(TARGET)
     CLEAN_FILES = $(OUT_DIR)/*
 endif
+
 
 # ---------------------------------------------------------
 # Main Targets
@@ -72,55 +75,59 @@ build:
 
 verify: $(TARGET) directories
 	@echo "--- Verifying ---"
-	$(EXEC) verify -i $(INPUT_XML) -o $(VERIFY_OUTPUT)
+ifeq ($(FIX), 1)
+	$(EXEC) verify -i $(INPUT_XML) -f -o $(OUT_DIR)/$(VERIFY)
+else
+	$(EXEC) verify -i $(INPUT_XML) -o $(OUT_DIR)/$(VERIFY)
+endif
 
 format: $(TARGET) directories
 	@echo "--- Formatting ---"
-	$(EXEC) format -i $(INPUT_XML) -o $(FORMAT_OUTPUT)
+	$(EXEC) format -i $(INPUT_XML) -o $(OUT_DIR)/$(FORMAT)
 
 convert: $(TARGET) directories
 	@echo "--- Converting to JSON ---"
-	$(EXEC) json -i $(INPUT_XML) -o $(JSON_FILE)
+	$(EXEC) json -i $(INPUT_XML) -o $(OUT_DIR)/$(JSON)
 
 minify: $(TARGET) directories
 	@echo "--- Minifying ---"
-	$(EXEC) mini -i $(INPUT_XML) -o $(MINIFY_OUTPUT)
+	$(EXEC) mini -i $(INPUT_XML) -o $(OUT_DIR)/$(MINIFY)
 
 compress: $(TARGET) directories
 	@echo "--- Compressing ---"
-	$(EXEC) compress -i $(INPUT_XML) -o $(COMP_FILE)
+	$(EXEC) compress -i $(INPUT_XML) -o $(OUT_DIR)/$(COMP)
 
 decompress: $(TARGET) directories
 	@echo "--- Decompressing ---"
-	$(EXEC) decompress -i $(COMP_FILE) -o $(DECOMP_OUTPUT)
+	$(EXEC) decompress -i $(OUT_DIR)/$(COMP) -o $(OUT_DIR)/$(DECOMP)
 
 draw: $(TARGET) directories
 	@echo "--- Drawing Network ---"
-	$(EXEC) draw -i $(INPUT_XML) -o $(DRAW_OUTPUT)
+	$(EXEC) draw -i $(INPUT_XML) -o $(OUT_DIR)/$(DRAW)
 
 searchword: $(TARGET) directories
 	@echo "--- Searching ---"
-	$(EXEC) search -w $(WORD) -i $(INPUT_XML) -o $(SEARCH_W_OUTPUT)
+	$(EXEC) search -w $(WORD) -i $(INPUT_XML) -o $(OUT_DIR)/$(SEARCH_W)
 
 searchtopic: $(TARGET) directories
 	@echo "--- Searching ---"
-	$(EXEC) search -t $(TOPIC) -i $(INPUT_XML) -o $(SEARCH_T_OUTPUT)
+	$(EXEC) search -t $(TOPIC) -i $(INPUT_XML) -o $(OUT_DIR)/$(SEARCH_T)
 
 active: $(TARGET) directories
 	@echo "--- Most Active User ---"
-	$(EXEC) most_active -i $(INPUT_XML) -o $(MOST_ACTIVE)
+	$(EXEC) most_active -i $(INPUT_XML) -o $(OUT_DIR)/$(MOST_ACTIVE)
 
 influencer: $(TARGET) directories
 	@echo "--- Most Influencer User ---"
-	$(EXEC) most_influencer -i $(INPUT_XML) -o $(MOST_INFLUENCER)
+	$(EXEC) most_influencer -i $(INPUT_XML) -o $(OUT_DIR)/$(MOST_INFLUENCER)
 
 mutual: $(TARGET) directories
-	@echo "--- mutual users between users with ids: $(IDS) ---"
-	$(EXEC) mutual -i $(INPUT_XML) -ids $(IDS) -o $(MOST_INFLUENCER)
+	@echo "--- Mutual users between users with ids: $(IDS) ---"
+	$(EXEC) mutual -i $(INPUT_XML) -ids $(IDS) -o $(OUT_DIR)/$(MUTUAL)
 
 suggest: $(TARGET) directories
 	@echo "--- Writes a list of suggested users for user with id: $(USER_ID) ---"
-	$(EXEC) suggest -i $(INPUT_XML) -id $(USER_ID) -o $(SUGGEST)
+	$(EXEC) suggest -i $(INPUT_XML) -id $(USER_ID) -o $(OUT_DIR)/$(SUGGEST)
 
 # ---------------------------------------------------------
 # Clean
