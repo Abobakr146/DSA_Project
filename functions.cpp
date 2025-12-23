@@ -957,8 +957,94 @@ string draw(const string &xml)
 }
 
 string most_active(const string &xml)
-{
-    return "";
+{ struct User {
+    string id;
+    string name;
+    int connections = 0;
+};
+      vector<User> users;
+
+    // ===== Pass 1: Read users (id + name) =====
+    int i = 0;
+    while (i < xml.length()) {
+        if (xml.substr(i, 6) == "<user>") {
+            i += 6;
+
+            string id = "", name = "";
+            bool idRead = false, nameRead = false;
+
+            while (xml.substr(i, 7) != "</user>") {
+                if (!idRead && xml.substr(i, 4) == "<id>") {
+                    i += 4;
+                    while (xml.substr(i, 5) != "</id>") id += xml[i++];
+                    i += 5;
+                    idRead = true;
+                }
+                else if (!nameRead && xml.substr(i, 6) == "<name>") {
+                    i += 6;
+                    while (xml.substr(i, 7) != "</name>") name += xml[i++];
+                    i += 7;
+                    nameRead = true;
+                }
+                else i++;
+            }
+
+            users.push_back({id, name, 0});
+            i += 7;
+        } else i++;
+    }
+
+    // ===== Pass 2: Count connections =====
+    i = 0;
+    while (i < xml.length()) {
+        if (xml.substr(i, 6) == "<user>") {
+            i += 6;
+
+            string ownerId = "";
+
+            while (xml.substr(i, 4) != "<id>") i++;
+            i += 4;
+            while (xml.substr(i, 5) != "</id>") ownerId += xml[i++];
+            i += 5;
+
+            while (xml.substr(i, 7) != "</user>") {
+                if (xml.substr(i, 10) == "<follower>") {
+                    i += 10;
+
+                    string followerId = "";
+                    while (xml.substr(i, 4) != "<id>") i++;
+                    i += 4;
+                    while (xml.substr(i, 5) != "</id>") followerId += xml[i++];
+                    i += 5;
+
+                    // Increase connections for both users
+                    for (auto &u : users) {
+                        if (u.id == ownerId || u.id == followerId)
+                            u.connections++;
+                    }
+                }
+                else i++;
+            }
+            i += 7;
+        } else i++;
+    }
+
+    // ===== Find max connections =====
+    int maxConn = -1;
+    for (auto &u : users)
+        if (u.connections > maxConn)
+            maxConn = u.connections;
+
+    // ===== Build return string =====
+    string result;
+    for (auto &u : users) {
+        if (u.connections == maxConn) {
+            if (!result.empty()) result += " | ";
+            result += "ID: " + u.id + ", Name: " + u.name;
+        }
+    }
+
+    return result;
 }
 
 string most_influencer(const string &xml)
