@@ -1114,26 +1114,72 @@ string mutual(const string &xml, const vector<int> &ids)
     size_t pos = 0;
     while ((pos = xml.find("<user>", pos)) != string::npos) {
 
-        size_t idStart = xml.find("<id>", pos) + 4;
-        size_t idEnd   = xml.find("</id>", idStart);
+        // Find the end of this user block first to ensure we advance properly
+        size_t userEnd = xml.find("</user>", pos);
+        if (userEnd == string::npos) {
+            break;  // No closing tag, exit to avoid infinite loop
+        }
+
+        size_t idStart = xml.find("<id>", pos);
+        size_t idEnd   = xml.find("</id>", pos);
+        
+        // Validate id tags exist and are within this user block
+        if (idStart == string::npos || idEnd == string::npos || idStart > userEnd) {
+            pos = userEnd + 7;  // Move past </user>
+            continue;
+        }
+        
+        idStart += 4;  // Move past <id>
         int userId = stoi(xml.substr(idStart, idEnd - idStart));
 
         size_t followersStart = xml.find("<followers>", pos);
-        size_t followersEnd   = xml.find("</followers>", followersStart);
+        size_t followersEnd   = xml.find("</followers>", pos);
 
-        size_t fpos = followersStart;
-        while ((fpos = xml.find("<follower>", fpos)) != string::npos &&
-               fpos < followersEnd) {
+        // Only process followers if both tags exist and are within this user block
+        if (followersStart != string::npos && followersEnd != string::npos && 
+            followersStart < userEnd && followersEnd < userEnd) {
+            
+            size_t fpos = followersStart;
+            while ((fpos = xml.find("<follower>", fpos)) != string::npos &&
+                   fpos < followersEnd) {
 
-            size_t fStart = fpos + 10;
-            size_t fEnd   = xml.find("</follower>", fStart);
-            int followerId = stoi(xml.substr(fStart, fEnd - fStart));
+                size_t fStart = fpos + 10;  // Move past <follower>
+                size_t fEnd = xml.find("</follower>", fStart);
+                
+                if (fEnd == string::npos || fEnd > followersEnd) {
+                    break;
+                }
+                
+                // Get the content between <follower> and </follower>
+                string followerContent = xml.substr(fStart, fEnd - fStart);
+                
+                // Check if there's a nested <id> tag or direct content
+                size_t nestedIdStart = followerContent.find("<id>");
+                if (nestedIdStart != string::npos) {
+                    // Nested id format: <follower><id>X</id></follower>
+                    size_t nestedIdEnd = followerContent.find("</id>");
+                    if (nestedIdEnd != string::npos) {
+                        string idStr = followerContent.substr(nestedIdStart + 4, nestedIdEnd - nestedIdStart - 4);
+                        int followerId = stoi(idStr);
+                        followers[userId].push_back(followerId);
+                    }
+                } else {
+                    // Direct content format: <follower>X</follower>
+                    // Trim whitespace
+                    size_t start = followerContent.find_first_not_of(" \t\n\r");
+                    size_t end = followerContent.find_last_not_of(" \t\n\r");
+                    if (start != string::npos && end != string::npos) {
+                        string idStr = followerContent.substr(start, end - start + 1);
+                        int followerId = stoi(idStr);
+                        followers[userId].push_back(followerId);
+                    }
+                }
 
-            followers[userId].push_back(followerId);
-            fpos = fEnd;
+                fpos = fEnd + 11;  // Move past </follower>
+            }
         }
 
-        pos = idEnd;
+        pos = userEnd + 7;  // Move past </user> to next user
     }
 
     // --------- HANDLE SINGLE USER CASE ---------
