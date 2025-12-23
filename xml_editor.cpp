@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
     else if (operation == "mutual")
     {
         Ids = strIDs2int(strIDs);
-        // updated_xml = mutual(xml_content, Ids);
+        updated_xml = mutual(xml_content, Ids);
     }
     
     

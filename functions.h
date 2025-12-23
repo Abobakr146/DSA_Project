@@ -61,7 +61,7 @@ string draw(const string &xml);
 string fixation(const string &xml);
 string most_active(const string &xml);
 string most_influencer(const string &xml);
-string mutual(const string &xml);
+string mutual(const string &xml, const vector<int> &ids);
 string suggest(const string &xml, int userId);
 vector<string> searchPostsByWord(const string& xml, const string& word);
 vector<string> searchPostsByTopic(const string& xml, const string& topic);

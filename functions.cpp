@@ -1101,8 +1101,13 @@ string most_influencer(const string &xml)
     return result;
 }
 
-string mutual(const string &xml)
+string mutual(const string &xml, const vector<int> &ids)
 {
+    // --------- HANDLE EDGE CASES ---------
+    if (ids.empty()) {
+        return "Error: No user IDs provided.";
+    }
+
     map<int, vector<int>> followers;
 
     // --------- PARSE XML ---------
@@ -1131,11 +1136,24 @@ string mutual(const string &xml)
         pos = idEnd;
     }
 
-    // --------- FIND MUTUAL FOLLOWERS OF 1, 2, 3 ---------
-    vector<int> ids = {1, 2, 3};
+    // --------- HANDLE SINGLE USER CASE ---------
+    if (ids.size() == 1) {
+        int singleId = ids[0];
+        if (followers.find(singleId) == followers.end() || followers[singleId].empty()) {
+            return "User " + to_string(singleId) + " has no followers.";
+        }
+        
+        stringstream out;
+        out << "Followers of user " << singleId << ":\n";
+        for (int u : followers[singleId])
+            out << "User ID: " << u << "\n";
+        return out.str();
+    }
+
+    // --------- FIND MUTUAL FOLLOWERS ---------
     vector<int> result = followers[ids[0]];
 
-    for (int i = 1; i < ids.size(); i++) {
+    for (size_t i = 1; i < ids.size(); i++) {
         vector<int> temp;
         for (int u : result) {
             if (find(followers[ids[i]].begin(),
@@ -1152,7 +1170,15 @@ string mutual(const string &xml)
         return "No mutual followers found.";
 
     stringstream out;
-    out << "Mutual followers between users 1, 2, and 3:\n";
+    out << "Mutual followers between users ";
+    for (size_t i = 0; i < ids.size(); i++) {
+        out << ids[i];
+        if (i < ids.size() - 2)
+            out << ", ";
+        else if (i == ids.size() - 2)
+            out << ", and ";
+    }
+    out << ":\n";
     for (int u : result)
         out << "User ID: " << u << "\n";
 

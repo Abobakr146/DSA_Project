@@ -950,7 +950,7 @@ string most_influencer(const string &xml)
     return "";
 }
 
-string mutual(const string &xml)
+string mutual(const string &xml, const vector<int> &ids)
 {
     return "";
 }
