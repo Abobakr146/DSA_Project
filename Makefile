@@ -16,7 +16,7 @@ OS = windows
 OUT_DIR = output
 
 # Define Output Files (All inside the output directory)
-INPUT_XML       = full_test.xml
+INPUT_XML       = input_file.xml
 
 VERIFY_OUTPUT   = $(OUT_DIR)/verify_file.xml
 FORMAT_OUTPUT   = $(OUT_DIR)/format_file.xml
@@ -28,10 +28,14 @@ DRAW_OUTPUT     = $(OUT_DIR)/output_file.jpg
 TEMP_DOT        = temp_graph.dot
 SEARCH_W_OUTPUT = $(OUT_DIR)/search_word_file.xml
 SEARCH_T_OUTPUT = $(OUT_DIR)/search_topic_file.xml
+MOST_ACTIVE 	= $(OUT_DIR)/most_active_file.xml
+MOST_INFLUENCER = $(OUT_DIR)/most_influencer_file.xml
+SUGGEST 		= $(OUT_DIR)/suggest_file.xml
 
 WORD = Hello
 TOPIC = education
-
+IDS=1,2,3
+USER_ID=1
 RM = rm -f
 RMDIR = rm -rf
 MKDIR = mkdir -p $(OUT_DIR)
@@ -51,7 +55,7 @@ endif
 # Main Targets
 # ---------------------------------------------------------
 
-all: build directories verify format convert minify compress decompress draw searchword searchtopic
+all: clean build directories verify format convert minify compress decompress draw searchword searchtopic active influencer mutual suggest
 	@echo "All tasks completed successfully. Check the '$(OUT_DIR)' folder."
 
 # Create the output directory
@@ -102,6 +106,22 @@ searchtopic: $(TARGET) directories
 	@echo "--- Searching ---"
 	$(EXEC) search -t $(TOPIC) -i $(INPUT_XML) -o $(SEARCH_T_OUTPUT)
 
+active: $(TARGET) directories
+	@echo "--- Most Active User ---"
+	$(EXEC) most_active -i $(INPUT_XML) -o $(MOST_ACTIVE)
+
+influencer: $(TARGET) directories
+	@echo "--- Most Influencer User ---"
+	$(EXEC) most_influencer -i $(INPUT_XML) -o $(MOST_INFLUENCER)
+
+mutual: $(TARGET) directories
+	@echo "--- mutual users between users with ids: $(IDS) ---"
+	$(EXEC) mutual -i $(INPUT_XML) -ids $(IDS) -o $(MOST_INFLUENCER)
+
+suggest: $(TARGET) directories
+	@echo "--- Writes a list of suggested users for user with id: $(USER_ID) ---"
+	$(EXEC) suggest -i $(INPUT_XML) -id $(USER_ID) -o $(SUGGEST)
+
 # ---------------------------------------------------------
 # Clean
 # ---------------------------------------------------------
@@ -113,4 +133,4 @@ clean:
 	$(RMDIR) $(OUT_DIR)
 	clear
 
-.PHONY: clean all build directories
+.PHONY: all build directories
