@@ -957,7 +957,8 @@ string draw(const string &xml)
 }
 
 string most_active(const string &xml)
-{  struct User {
+{  
+    struct User {
         string id;
         string name;
         int followCount = 0;
@@ -1032,11 +1033,13 @@ string most_active(const string &xml)
 }
 
 string most_influencer(const string &xml)
-{    struct User {
-    string id;
-    string name;
-};
-      vector<User> topUsers;
+{    
+    struct User {
+        string id;
+        string name;
+    };
+    
+    vector<User> topUsers;
     int maxFollowers = -1;
 
     int i = 0;
@@ -1310,5 +1313,19 @@ vector<string> searchPostsByTopic(const string& xml, const string& topic) {
     }
 
     return results;
+}
+
+vector<int> strIDs2int(const string &ids) {
+    vector<int> Ids;
+    stringstream ss(ids);
+    string segment;
+
+    // Use getline to split the string by the comma delimiter
+    while (getline(ss, segment, ',')) {
+        // Convert the string segment to an integer and push it to the vector
+        Ids.push_back(stoi(segment));
+    }
+
+    return Ids;
 }
 

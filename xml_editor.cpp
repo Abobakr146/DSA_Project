@@ -12,6 +12,8 @@ int main(int argc, char* argv[]) {
     string post_seach;
     bool isWord; // true => word, false => topic
     vector<string> s_posts;
+    vector<int> Ids;
+    string strIDs;
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -41,6 +43,11 @@ int main(int argc, char* argv[]) {
             post_seach = argv[i+1];
             i++;
             isWord = false;
+        }
+        else if (arg == "-ids") {
+            strIDs = argv[i+1];
+            i++;
+            cout << "strIDs: " << strIDs << endl;
         }
         else if (i == 1) {
             operation = arg;
@@ -108,8 +115,8 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         updated_xml = suggest(xml_content, userId);
-        cout << "Suggested users for User " << userId << ":" << endl;
-        cout << updated_xml;
+        // cout << "Suggested users for User " << userId << ":" << endl;
+        // cout << updated_xml;
     }
     else if (operation == "search")
     {
@@ -125,6 +132,20 @@ int main(int argc, char* argv[]) {
             updated_xml += "\n";
         }
     }
+    else if (operation == "most_active")
+    {
+        updated_xml = most_active(xml_content);
+    }
+    else if (operation == "most_influencer")
+    {
+        updated_xml = most_influencer(xml_content);
+    }
+    else if (operation == "mutual")
+    {
+        Ids = strIDs2int(strIDs);
+        // updated_xml = mutual(xml_content, Ids);
+    }
+    
     
 
     // Write output file (binary for compress, text for everything else)

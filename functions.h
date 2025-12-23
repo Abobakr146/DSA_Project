@@ -65,5 +65,6 @@ string mutual(const string &xml);
 string suggest(const string &xml, int userId);
 vector<string> searchPostsByWord(const string& xml, const string& word);
 vector<string> searchPostsByTopic(const string& xml, const string& topic);
+vector<int> strIDs2int(const string &ids);
 
 #endif
