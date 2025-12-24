@@ -18,7 +18,8 @@ OUT_DIR = output
 # Define Output Files (All inside the output directory)
 INPUT_XML       = input_file.xml
 
-VERIFY   		= verify_file.xml
+VERIFY   		= verify_file.txt
+FIX   			= fixed_file.xml
 FORMAT   		= format_file.xml
 MINIFY   		= minify_file.xml
 DECOMP   		= decompress_file.xml
@@ -33,7 +34,6 @@ MOST_INFLUENCER = most_influencer_file.xml
 MUTUAL 			= mutual_file.xml
 SUGGEST 		= suggest_file.xml
 
-FIX=1
 WORD = Hello
 TOPIC = education
 IDS=1,2,3
@@ -58,7 +58,7 @@ endif
 # Main Targets
 # ---------------------------------------------------------
 
-all: clean build directories verify format convert minify compress decompress draw searchword searchtopic active influencer mutual suggest
+all: clean build directories verify fix format convert minify compress decompress draw searchword searchtopic active influencer mutual suggest
 	@echo "All tasks completed successfully. Check the '$(OUT_DIR)' folder."
 
 # Create the output directory
@@ -75,11 +75,12 @@ build:
 
 verify: $(TARGET) directories
 	@echo "--- Verifying ---"
-ifeq ($(FIX), 1)
-	$(EXEC) verify -i $(INPUT_XML) -f -o $(OUT_DIR)/$(VERIFY)
-else
 	$(EXEC) verify -i $(INPUT_XML) -o $(OUT_DIR)/$(VERIFY)
-endif
+
+fix: $(TARGET) directories
+	@echo "--- Fixing ---"
+	$(EXEC) verify -i $(INPUT_XML) -f -o $(OUT_DIR)/$(FIX)
+
 
 format: $(TARGET) directories
 	@echo "--- Formatting ---"

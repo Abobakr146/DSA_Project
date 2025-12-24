@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
     vector<string> s_posts;
     vector<int> Ids;
     string strIDs;
+    string verify_result;
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -90,8 +91,9 @@ int main(int argc, char* argv[]) {
     string updated_xml;
     if(operation == "verify") {
         updated_xml = verify(xml_content);
-        if (fix)
-            updated_xml = fixation(updated_xml);
+        if (fix) {
+            updated_xml = fixation(xml_content);
+        }
     }
     else if(operation == "format") {
         updated_xml = format(xml_content);

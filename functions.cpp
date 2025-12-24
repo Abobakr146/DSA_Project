@@ -262,7 +262,7 @@ string verify(const string &xml) {
         cout << result << endl;
     }
     
-    return xml;
+    return result;
 }
 
 string fixation(const string &xml) {
