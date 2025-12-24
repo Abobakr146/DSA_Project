@@ -27,17 +27,17 @@ JSON       		= output_file.json
 COMP       		= output_file.comp
 DRAW     		= output_file.jpg
 TEMP_DOT        = temp_graph.dot
-SEARCH_W 		= search_word_file.xml
-SEARCH_T 		= search_topic_file.xml
-MOST_ACTIVE 	= most_active_file.xml
-MOST_INFLUENCER = most_influencer_file.xml
-MUTUAL 			= mutual_file.xml
-SUGGEST 		= suggest_file.xml
+SEARCH_W 		= search_word_file.txt
+SEARCH_T 		= search_topic_file.txt
+MOST_ACTIVE 	= most_active_file.txt
+MOST_INFLUENCER = most_influencer_file.txt
+MUTUAL 			= mutual_file.txt
+SUGGEST 		= suggest_file.txt
 
 WORD = Hello
 TOPIC = education
-IDS=1,2,3
-USER_ID=1
+IDS=1,2
+USER_ID=4
 RM = rm -f
 RMDIR = rm -rf
 MKDIR = mkdir -p $(OUT_DIR)
@@ -74,11 +74,19 @@ build:
 # ---------------------------------------------------------
 
 verify: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Verifying ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) verify -i $(INPUT_XML) -o $(OUT_DIR)/$(VERIFY)
 
 fix: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Fixing ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) verify -i $(INPUT_XML) -f -o $(OUT_DIR)/$(FIX)
 
 
@@ -87,47 +95,91 @@ format: $(TARGET) directories
 	$(EXEC) format -i $(INPUT_XML) -o $(OUT_DIR)/$(FORMAT)
 
 convert: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Converting to JSON ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) json -i $(INPUT_XML) -o $(OUT_DIR)/$(JSON)
 
 minify: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Minifying ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) mini -i $(INPUT_XML) -o $(OUT_DIR)/$(MINIFY)
 
 compress: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Compressing ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) compress -i $(INPUT_XML) -o $(OUT_DIR)/$(COMP)
 
 decompress: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Decompressing ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) decompress -i $(OUT_DIR)/$(COMP) -o $(OUT_DIR)/$(DECOMP)
 
 draw: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Drawing Network ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) draw -i $(INPUT_XML) -o $(OUT_DIR)/$(DRAW)
 
 searchword: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Searching ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) search -w $(WORD) -i $(INPUT_XML) -o $(OUT_DIR)/$(SEARCH_W)
 
 searchtopic: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Searching ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) search -t $(TOPIC) -i $(INPUT_XML) -o $(OUT_DIR)/$(SEARCH_T)
 
 active: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
 	@echo "--- Most Active User ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) most_active -i $(INPUT_XML) -o $(OUT_DIR)/$(MOST_ACTIVE)
 
 influencer: $(TARGET) directories
-	@echo "--- Most Influencer User ---"
+	@echo ""
+	@echo "--- --- --- --- --- --- ---"
+	@echo "--- Most Influencer ---"
+	@echo "--- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) most_influencer -i $(INPUT_XML) -o $(OUT_DIR)/$(MOST_INFLUENCER)
 
 mutual: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- --- --- --- --- --- --- --- ---"
 	@echo "--- Mutual users between users with ids: $(IDS) ---"
+	@echo "--- --- --- --- --- --- --- --- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) mutual -i $(INPUT_XML) -ids $(IDS) -o $(OUT_DIR)/$(MUTUAL)
 
 suggest: $(TARGET) directories
+	@echo ""
+	@echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---"
 	@echo "--- Writes a list of suggested users for user with id: $(USER_ID) ---"
+	@echo "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---"
+	@echo ""
 	$(EXEC) suggest -i $(INPUT_XML) -id $(USER_ID) -o $(OUT_DIR)/$(SUGGEST)
 
 # ---------------------------------------------------------
