@@ -262,7 +262,7 @@ string verify(const string &xml) {
         cout << result << endl;
     }
     
-    return xml;
+    return result;
 }
 
 string fixation(const string &xml) {
@@ -951,11 +951,6 @@ string decompress(const string &xml)
     return output;
 }
 
-string draw(const string &xml)
-{
-    return "";
-}
-
 string most_active(const string &xml)
 {  
     struct User {
@@ -1223,7 +1218,6 @@ string mutual(const string &xml, const vector<int> &ids)
     return out.str();
 }
 
-
 string suggest(const string &xml, int userId)
 {
     Graph followersGraph = buildGraphFromXML(xml);
@@ -1392,3 +1386,4 @@ vector<int> strIDs2int(const string &ids) {
 
     return Ids;
 }
+

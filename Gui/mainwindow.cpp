@@ -7,10 +7,11 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
-#include <QDir>
 #include <QPixmap>
-#include <QRegularExpression>
+#include <QResizeEvent>
 #include <QDateTime>
+#include <QDir>
+#include <QRegularExpression>
 #include <map>
 #include <functional>
 #include <string>
@@ -42,6 +43,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lineEdit_suggest->setPlaceholderText("Enter a single user ID (e.g., 1)");
     ui->lineEdit_postSearch->setPlaceholderText("Enter word or topic to search in posts");
     
+    // Style the graph label with better appearance
+    ui->graphImageLabel->setStyleSheet(
+        "QLabel { "
+        "background-color: #fafafa; "
+        "border: 2px dashed #ccc; "
+        "border-radius: 4px; "
+        "color: #666; "
+        "font-size: 12px; "
+        "}"
+    );
+    
     // Initialize function map with all functions from functions.h EXCEPT draw
     function_map["verify"] = verify;
     function_map["format"] = format;
@@ -52,7 +64,6 @@ MainWindow::MainWindow(QWidget *parent)
     function_map["fixation"] = fixation;
     function_map["most_active"] = most_active;
     function_map["most_influencer"] = most_influencer;
-    // Note: draw is NOT in function_map - handled separately
 }
 
 MainWindow::~MainWindow()
@@ -98,84 +109,50 @@ string MainWindow::hexStringToBinary(const string& hexStr) {
     return binary;
 }
 
-// Helper function to execute a specific function
-void MainWindow::executeFunction(const string& funcName) {
-    QString inputText = ui->textEdit->toPlainText();
+// Display image in GUI with better quality
+void MainWindow::displayImageInGUI(const QString& imagePath) {
+    QPixmap pixmap(imagePath);
     
-    lastOutputWasBinary = false;
-    lastBinaryOutput.clear();
-    
-    // For compression/decompression functions, allow file selection if input is empty
-    if (inputText.isEmpty() && (funcName == "compress" || funcName == "decompress")) {
-        QString filter;
-        if (funcName == "decompress") {
-            filter = "Hex Files (*.hex);;Text Files (*.txt);;All Files (*.*)";
-        } else {
-            filter = "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)";
-        }
-        
-        QString inputFilePath = QFileDialog::getOpenFileName(this, 
-            "Select Input File", "", filter);
-        
-        if (inputFilePath.isEmpty()) {
-            QMessageBox::information(this, "No Input", "Please provide input or select a file.");
-            return;
-        }
-        
-        string fileContent;
-        if (!extract_content(inputFilePath.toStdString(), fileContent)) {
-            QMessageBox::critical(this, "Error", "Failed to read file!");
-            return;
-        }
-        
-        inputText = QString::fromStdString(fileContent);
-        ui->textEdit->setText(inputText);
-    }
-    // For other functions (including map it), just require input in the text field
-    else if (inputText.isEmpty()) {
-        QMessageBox::information(this, "No Input", "Please provide input in the text field.");
+    if (pixmap.isNull()) {
+        ui->graphImageLabel->setText("Error: Could not load image\n" + imagePath);
+        ui->graphImageLabel->setStyleSheet("QLabel { background-color: #f0f0f0; border: 2px solid #ccc; }");
         return;
     }
     
-    try {
-        string inputStdString;
-        
-        if (funcName == "decompress") {
-            string hexData = inputText.toStdString();
-            inputStdString = hexStringToBinary(hexData);
-            
-            if (inputStdString.empty()) {
-                ui->textEdit_2->setText("Error: Invalid hex input for decompression!");
-                return;
-            }
-        } else {
-            inputStdString = inputText.toStdString();
+    // Get the label size with some padding
+    QSize labelSize = ui->graphImageLabel->size();
+    int padding = 10;
+    QSize targetSize(labelSize.width() - padding * 2, labelSize.height() - padding * 2);
+    
+    // Scale the image to fit the label while maintaining aspect ratio
+    // Use SmoothTransformation for better quality
+    QPixmap scaledPixmap = pixmap.scaled(targetSize, 
+                                         Qt::KeepAspectRatio, 
+                                         Qt::SmoothTransformation);
+    
+    ui->graphImageLabel->setPixmap(scaledPixmap);
+    ui->graphImageLabel->setAlignment(Qt::AlignCenter);
+    ui->graphImageLabel->setStyleSheet(
+        "QLabel { "
+        "background-color: white; "
+        "border: 2px solid #2196F3; "
+        "border-radius: 4px; "
+        "padding: 5px; "
+        "}"
+    );
+    ui->graphImageLabel->setText("");  // Clear any text
+}
+
+// Handle window resize to rescale image
+void MainWindow::resizeEvent(QResizeEvent *event) {
+    QMainWindow::resizeEvent(event);
+    
+    // If we have a current JPG file, refresh the image display
+    if (!currentJpgFile.empty()) {
+        QString jpgPath = QString::fromStdString(currentJpgFile);
+        if (QFile::exists(jpgPath)) {
+            displayImageInGUI(jpgPath);
         }
-        
-        string result = function_map[funcName](inputStdString);
-        
-        if (result.empty()) {
-            ui->textEdit_2->setText("This function is not yet implemented!");
-            return;
-        }
-        
-        if (funcName == "compress") {
-            lastOutputWasBinary = true;
-            lastBinaryOutput = result;
-            ui->textEdit_2->setText(binaryToHexString(result));
-        } else if (funcName == "decompress") {
-            if (result.find("<") != string::npos) {
-                ui->textEdit_2->setText(QString::fromStdString(result));
-            } else {
-                lastOutputWasBinary = true;
-                lastBinaryOutput = result;
-                ui->textEdit_2->setText(binaryToHexString(result));
-            }
-        } else {
-            ui->textEdit_2->setText(QString::fromStdString(result));
-        }
-    } catch (const exception& e) {
-        ui->textEdit_2->setText("Error: " + QString(e.what()));
     }
 }
 
@@ -212,13 +189,27 @@ string MainWindow::generateDotContent(const string& xmlContent) {
     }
 }
 
-// "map it" button handler - Generates DOT from input XML
+// "map it" button handler - Generates DOT from input XML and allows saving as .dot file
 void MainWindow::on_pushButton_8_clicked() {
     QString inputText = ui->textEdit->toPlainText();
     
+    // If input is empty, allow user to select XML file
     if (inputText.isEmpty()) {
-        QMessageBox::information(this, "No Input", "Please provide XML input in the text field.");
-        return;
+        QString filePath = QFileDialog::getOpenFileName(this, "Select XML File", "", 
+                                                        "XML Files (*.xml);;Text Files (*.txt);;All Files (*.*)");
+        if (filePath.isEmpty()) {
+            QMessageBox::information(this, "No Input", "Please provide XML input.");
+            return;
+        }
+        
+        string fileContent;
+        if (!extract_content(filePath.toStdString(), fileContent)) {
+            QMessageBox::critical(this, "Error", "Failed to read file!");
+            return;
+        }
+        
+        inputText = QString::fromStdString(fileContent);
+        ui->textEdit->setText(inputText);
     }
     
     try {
@@ -227,8 +218,29 @@ void MainWindow::on_pushButton_8_clicked() {
         if (dotContent.find("Error:") == 0) {
             ui->textEdit_2->setText(QString::fromStdString(dotContent));
         } else {
-            // Show ONLY the DOT content
+            // Show the DOT content
             ui->textEdit_2->setText(QString::fromStdString(dotContent));
+            
+            // Store the DOT content for potential saving
+            lastOutputWasBinary = false;
+            lastBinaryOutput.clear();
+            
+            // Show success message with saving instructions
+            QString result = "✓ DOT graph generated successfully!\n\n";
+            result += "DOT Content:\n";
+            result += "----------------------------------------\n";
+            result += QString::fromStdString(dotContent).left(500); // Show first 500 chars
+            if (dotContent.length() > 500) {
+                result += "\n... [truncated - full content in output area]\n";
+            }
+            result += "\n----------------------------------------\n\n";
+            result += "You can now:\n";
+            result += "1. Copy the DOT content from the output area\n";
+            result += "2. Click 'Save Output' to save as .dot file\n";
+            result += "3. Click 'to jpg' to convert to image\n";
+            result += "4. Click 'View Graph' to generate and view graph directly\n";
+            
+            ui->textEdit_2->setText(result);
         }
         
     } catch (const exception& e) {
@@ -238,94 +250,149 @@ void MainWindow::on_pushButton_8_clicked() {
 
 // "to jpg" button handler - Converts DOT to JPG
 void MainWindow::on_pushButton_15_clicked() {
-    QString inputText = ui->textEdit->toPlainText();
+    QString dotFilePath;
     
-    if (inputText.isEmpty()) {
-        QMessageBox::information(this, "No Input", 
-            "Please provide DOT content in the input field or generate it using 'map it'.");
+    // Always prompt user to select a DOT file
+    dotFilePath = QFileDialog::getOpenFileName(this, 
+        "Select DOT File to Convert", 
+        "", 
+        "DOT Files (*.dot);;All Files (*.*)");
+    
+    if (dotFilePath.isEmpty()) {
+        QMessageBox::information(this, "No File Selected", 
+            "Please select a DOT file to convert to JPG.");
         return;
     }
     
+    // Verify the file exists
+    if (!QFile::exists(dotFilePath)) {
+        QMessageBox::critical(this, "Error", "The selected file does not exist!");
+        return;
+    }
+    
+    // Read and validate DOT file content
+    QFile dotFile(dotFilePath);
+    if (!dotFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, "Error", "Failed to read DOT file!");
+        return;
+    }
+    
+    QString dotContent = dotFile.readAll();
+    dotFile.close();
+    
+    // Validate DOT content
+    if (!dotContent.contains("digraph") && !dotContent.contains("graph")) {
+        QMessageBox::warning(this, "Invalid DOT File", 
+            "The selected file doesn't appear to be a valid DOT file.\n"
+            "DOT files should contain 'digraph' or 'graph' declarations.");
+        return;
+    }
+    
+    // Display DOT content in input area for reference
+    ui->textEdit->setText(dotContent);
+    
     try {
-        QString dotContent = inputText;
-        
-        // Check if the input looks like DOT content
-        if (!dotContent.contains("digraph") && !dotContent.contains("->")) {
-            QMessageBox::warning(this, "Invalid Input", 
-                "Input doesn't appear to be valid DOT content.\n"
-                "Please generate DOT content using 'map it' first.");
-            return;
-        }
-        
-        // Save DOT content to a temporary file
-        QDateTime now = QDateTime::currentDateTime();
-        QString timestamp = now.toString("yyyyMMdd_hhmmss");
-        QString tempDotFile = "temp_graph_" + timestamp + ".dot";
-        QString tempJpgFile = "graph_" + timestamp + ".jpg";
-        
-        QFile dotFile(tempDotFile);
-        if (dotFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            QTextStream out(&dotFile);
-            out << dotContent;
-            dotFile.close();
-        } else {
-            ui->textEdit_2->setText("Error: Could not create temporary DOT file.");
-            return;
-        }
-        
         // Ask user where to save the JPG
+        QString defaultName = QFileInfo(dotFilePath).baseName() + ".jpg";
         QString savePath = QFileDialog::getSaveFileName(this, 
             "Save Graph as JPG", 
-            "graph.jpg", 
+            defaultName, 
             "JPEG Images (*.jpg *.jpeg);;PNG Images (*.png);;All Files (*.*)");
         
         if (savePath.isEmpty()) {
-            // Clean up temp file
-            QFile::remove(tempDotFile);
             return;
         }
         
-        // Convert DOT to JPG
-        renderGraph(tempDotFile.toStdString(), savePath.toStdString());
-        
-        // Clean up temp file
-        QFile::remove(tempDotFile);
+        // Convert DOT to JPG using the existing DOT file
+        renderGraph(dotFilePath.toStdString(), savePath.toStdString());
         
         // Update current files
-        currentDotFile = tempDotFile.toStdString();
+        currentDotFile = dotFilePath.toStdString();
         currentJpgFile = savePath.toStdString();
         
+        // Display the image in GUI
+        displayImageInGUI(savePath);
+        
+        // Show success message
+        QString result = "✓ DOT file converted to JPG successfully!\n\n";
+        result += "Source DOT: " + QFileInfo(dotFilePath).fileName() + "\n";
+        result += "Output JPG: " + savePath + "\n\n";
+        result += "Graph displayed above ↑\n\n";
+        result += "The DOT content has been loaded into the input area.";
+        
+        ui->textEdit_2->setText(result);
+        
         QMessageBox::information(this, "Success", 
-            "Graph saved as JPG:\n" + savePath);
-            
+            "DOT file successfully converted to JPG!\n\nSaved to: " + savePath);
+        
     } catch (const exception& e) {
-        ui->textEdit_2->setText("Error: " + QString(e.what()));
+        ui->textEdit_2->setText("Error during conversion: " + QString(e.what()));
+        QMessageBox::critical(this, "Conversion Error", 
+            "Failed to convert DOT to JPG:\n" + QString(e.what()));
     }
 }
 
-// "View Graph" button handler - Uses drawXMLGraph
+// "View Graph" button handler - Uses the 3 separate graph functions
 void MainWindow::on_pushButton_14_clicked() {
     QString inputText = ui->textEdit->toPlainText();
     
+    // If input is empty, allow user to select XML file
     if (inputText.isEmpty()) {
-        QMessageBox::information(this, "No Input", "Please provide XML input in the text field.");
-        return;
+        QString filePath = QFileDialog::getOpenFileName(this, "Select XML File", "", 
+                                                        "XML Files (*.xml);;Text Files (*.txt);;All Files (*.*)");
+        if (filePath.isEmpty()) {
+            QMessageBox::information(this, "No Input", "Please provide XML input.");
+            return;
+        }
+        
+        string fileContent;
+        if (!extract_content(filePath.toStdString(), fileContent)) {
+            QMessageBox::critical(this, "Error", "Failed to read file!");
+            return;
+        }
+        
+        inputText = QString::fromStdString(fileContent);
+        ui->textEdit->setText(inputText);
     }
     
     try {
-        QDateTime now = QDateTime::currentDateTime();
-        QString timestamp = now.toString("yyyyMMdd_hhmmss");
-        currentJpgFile = "graph_" + timestamp.toStdString() + ".jpg";
-        
         string xmlContent = inputText.toStdString();
         
-        // Use the drawXMLGraph function from graph.h
-        drawXMLGraph(xmlContent, currentJpgFile);
+        // Generate unique filenames with timestamp
+        QDateTime now = QDateTime::currentDateTime();
+        QString timestamp = now.toString("yyyyMMdd_hhmmss");
+        QString dotFileName = "graph_" + timestamp + ".dot";
+        QString jpgFileName = "graph_" + timestamp + ".jpg";
         
-        // Show success message
-        QString result = "✓ Graph generated successfully!\n";
-        result += "Image saved as: " + QString::fromStdString(currentJpgFile) + "\n";
-        result += "You can find the image in the application directory.";
+        // Use the 3 separate functions from graph.h
+        // 1. Build graph from XML
+        Graph graph = buildGraphFromXML(xmlContent);
+        
+        if (graph.empty()) {
+            ui->textEdit_2->setText("Error: No user/follower data found in XML.");
+            return;
+        }
+        
+        // 2. Export to DOT file
+        exportToDot(graph, dotFileName.toStdString());
+        
+        // 3. Render DOT to JPG
+        renderGraph(dotFileName.toStdString(), jpgFileName.toStdString());
+        
+        // Update current files
+        currentDotFile = dotFileName.toStdString();
+        currentJpgFile = jpgFileName.toStdString();
+        
+        // Display the image in GUI
+        displayImageInGUI(jpgFileName);
+        
+        // Show success message with file locations
+        QString result = "✓ Graph generated successfully!\n\n";
+        result += "Generated files:\n";
+        result += "• DOT file: " + dotFileName + "\n";
+        result += "• JPG file: " + jpgFileName + "\n\n";
+        result += "Graph displayed above ↑\n";
+        result += "Files are saved in the application directory.";
         
         ui->textEdit_2->setText(result);
         
@@ -336,40 +403,40 @@ void MainWindow::on_pushButton_14_clicked() {
 
 // === XML Operations ===
 void MainWindow::on_pushButton_clicked() { 
-    executeFunction("verify"); 
+    executeFunction("verify", true); 
 }
 
 void MainWindow::on_pushButton_2_clicked() { 
-    executeFunction("json"); 
+    executeFunction("json", true); 
 }
 
 void MainWindow::on_pushButton_3_clicked() { 
-    executeFunction("compress"); 
+    executeFunction("compress", true); 
 }
 
 void MainWindow::on_pushButton_4_clicked() { 
-    executeFunction("decompress"); 
+    executeFunction("decompress", true); 
 }
 
 void MainWindow::on_pushButton_5_clicked() { 
-    executeFunction("mini"); 
+    executeFunction("mini", true); 
 }
 
 void MainWindow::on_pushButton_6_clicked() { 
-    executeFunction("format"); 
+    executeFunction("format", true); 
 }
 
 void MainWindow::on_pushButton_fixation_clicked() { 
-    executeFunction("fixation"); 
+    executeFunction("fixation", true); 
 }
 
 // === Network Analysis ===
 void MainWindow::on_pushButton_11_clicked() { 
-    executeFunction("most_active"); 
+    executeFunction("most_active", true); 
 }
 
 void MainWindow::on_pushButton_9_clicked() { 
-    executeFunction("most_influencer"); 
+    executeFunction("most_influencer", true); 
 }
 
 // Mutual Users
@@ -377,8 +444,8 @@ void MainWindow::on_pushButton_mutual_clicked() {
     QString inputText = ui->textEdit->toPlainText();
     
     if (inputText.isEmpty()) {
-        QString inputFilePath = QFileDialog::getOpenFileName(this, 
-            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
+        QString inputFilePath = QFileDialog::getOpenFileName(this, "Select XML File", "", 
+                                                            "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
         
         if (inputFilePath.isEmpty()) {
             QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
@@ -421,8 +488,8 @@ void MainWindow::on_pushButton_suggest_clicked() {
     QString inputText = ui->textEdit->toPlainText();
     
     if (inputText.isEmpty()) {
-        QString inputFilePath = QFileDialog::getOpenFileName(this, 
-            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
+        QString inputFilePath = QFileDialog::getOpenFileName(this, "Select XML File", "", 
+                                                            "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
         
         if (inputFilePath.isEmpty()) {
             QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
@@ -472,8 +539,8 @@ void MainWindow::on_pushButton_searchWord_clicked() {
     QString inputText = ui->textEdit->toPlainText();
     
     if (inputText.isEmpty()) {
-        QString inputFilePath = QFileDialog::getOpenFileName(this, 
-            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
+        QString inputFilePath = QFileDialog::getOpenFileName(this, "Select XML File", "", 
+                                                            "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
         
         if (inputFilePath.isEmpty()) {
             QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
@@ -521,8 +588,8 @@ void MainWindow::on_pushButton_searchTopic_clicked() {
     QString inputText = ui->textEdit->toPlainText();
     
     if (inputText.isEmpty()) {
-        QString inputFilePath = QFileDialog::getOpenFileName(this, 
-            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
+        QString inputFilePath = QFileDialog::getOpenFileName(this, "Select XML File", "", 
+                                                            "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
         
         if (inputFilePath.isEmpty()) {
             QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
@@ -569,51 +636,147 @@ void MainWindow::on_pushButton_searchTopic_clicked() {
 void MainWindow::on_pushButton_7_clicked() { 
     QString outputText = ui->textEdit_2->toPlainText();
     
+    // Check if we have a current JPG file to save
+    if (!currentJpgFile.empty() && QFile::exists(QString::fromStdString(currentJpgFile))) {
+        QString defaultName = QFileInfo(QString::fromStdString(currentJpgFile)).fileName();
+        QString savePath = QFileDialog::getSaveFileName(this, 
+            "Save Graph Image", 
+            defaultName,
+            "JPEG Images (*.jpg *.jpeg);;PNG Images (*.png);;All Files (*.*)");
+        
+        if (savePath.isEmpty()) {
+            return;
+        }
+        
+        // Copy the JPG file to the new location
+        if (QFile::copy(QString::fromStdString(currentJpgFile), savePath)) {
+            QMessageBox::information(this, "Success", 
+                "Graph image saved to:\n" + savePath);
+        } else {
+            QMessageBox::critical(this, "Error", "Failed to save image!");
+        }
+        return;
+    }
+    
+    // Check if we have DOT content in the output (from "map it" button)
+    bool hasDotContent = (outputText.contains("digraph") || outputText.contains("graph")) && 
+                         (outputText.contains("->") || outputText.contains("--"));
+    
+    // Check if we have a current DOT file
+    if (!currentDotFile.empty() && QFile::exists(QString::fromStdString(currentDotFile)) && hasDotContent) {
+        QString defaultName = QFileInfo(QString::fromStdString(currentDotFile)).fileName();
+        QString savePath = QFileDialog::getSaveFileName(this, 
+            "Save DOT File", 
+            defaultName,
+            "DOT Files (*.dot);;Text Files (*.txt);;All Files (*.*)");
+        
+        if (savePath.isEmpty()) {
+            return;
+        }
+        
+        // Copy the DOT file to the new location
+        if (QFile::copy(QString::fromStdString(currentDotFile), savePath)) {
+            QMessageBox::information(this, "Success", 
+                "DOT file saved to:\n" + savePath);
+        } else {
+            // If copy fails, try to write the content directly
+            QFile outputFile(savePath);
+            if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream out(&outputFile);
+                // Try to extract just the DOT content from outputText
+                QString dotContent = outputText;
+                // Remove any additional text before/after the DOT content
+                if (dotContent.contains("digraph") && dotContent.contains("}")) {
+                    int start = dotContent.indexOf("digraph");
+                    int end = dotContent.lastIndexOf("}") + 1;
+                    if (start != -1 && end != -1 && end > start) {
+                        dotContent = dotContent.mid(start, end - start);
+                    }
+                }
+                out << dotContent;
+                outputFile.close();
+                QMessageBox::information(this, "Success", 
+                    "DOT content saved to:\n" + savePath);
+            } else {
+                QMessageBox::critical(this, "Error", "Failed to save DOT file!");
+            }
+        }
+        return;
+    }
+    
+    // Otherwise save text output
     if (outputText.isEmpty()) {
         QMessageBox::information(this, "No Output", "There is no output to save.");
         return;
     }
     
     QString filter;
+    QString defaultExtension;
     
-    if (outputText.contains("{\"") && outputText.contains("}")) {
+    // Determine file type based on content
+    if (hasDotContent) {
+        filter = "DOT Graph Files (*.dot);;Text Files (*.txt);;All Files (*.*)";
+        defaultExtension = ".dot";
+    } else if (outputText.contains("{\"") && outputText.contains("}")) {
         filter = "JSON Files (*.json);;Text Files (*.txt);;All Files (*.*)";
-    } else if (outputText.contains("digraph") || outputText.contains("->")) {
-        filter = "DOT Files (*.dot);;Text Files (*.txt);;All Files (*.*)";
+        defaultExtension = ".json";
     } else if (outputText.contains("XML is valid") || outputText.contains("Error at line")) {
         filter = "Text Files (*.txt);;Log Files (*.log);;All Files (*.*)";
+        defaultExtension = ".txt";
     } else if (outputText.contains("<") && outputText.contains(">")) {
         filter = "XML Files (*.xml);;Text Files (*.txt);;All Files (*.*)";
+        defaultExtension = ".xml";
     } else if (lastOutputWasBinary || 
                (outputText.length() > 0 && 
                 QRegularExpression("^[0-9A-F]{2}( [0-9A-F]{2})*$").match(outputText).hasMatch())) {
-        filter = "Hex Files (*.hex);;Text Files (*.txt);;All Files (*.*)";
+        filter = "Binary Files (*.bin);;Hex Files (*.hex);;Text Files (*.txt);;All Files (*.*)";
+        defaultExtension = ".bin";
     } else {
         filter = "Text Files (*.txt);;All Files (*.*)";
+        defaultExtension = ".txt";
     }
     
     QString outputFilePath = QFileDialog::getSaveFileName(this, 
-        "Save Output File", "", filter);
+        "Save Output File", 
+        "output" + defaultExtension, 
+        filter);
 
     if (outputFilePath.isEmpty()) {
         return;
     }
 
+    // Handle binary output
     if (lastOutputWasBinary && !lastBinaryOutput.empty()) {
         QFile outputFile(outputFilePath);
-        if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            QTextStream out(&outputFile);
-            out << outputText;
+        if (outputFile.open(QIODevice::WriteOnly)) {
+            outputFile.write(lastBinaryOutput.c_str(), lastBinaryOutput.size());
             outputFile.close();
-            QMessageBox::information(this, "Success", "File saved to:\n" + outputFilePath);
+            QMessageBox::information(this, "Success", "Binary file saved to:\n" + outputFilePath);
         } else {
-            QMessageBox::critical(this, "Error", "Unable to save file!");
+            QMessageBox::critical(this, "Error", "Unable to save binary file!");
         }
     } else {
+        // Handle text output
         QFile outputFile(outputFilePath);
         if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&outputFile);
-            out << outputText;
+            
+            // For DOT files, extract just the graph content if it's mixed with other text
+            if (hasDotContent && outputFilePath.endsWith(".dot", Qt::CaseInsensitive)) {
+                QString dotContent = outputText;
+                // Try to extract just the graph definition
+                if (dotContent.contains("digraph") && dotContent.contains("}")) {
+                    int start = dotContent.indexOf("digraph");
+                    int end = dotContent.lastIndexOf("}") + 1;
+                    if (start != -1 && end != -1 && end > start) {
+                        dotContent = dotContent.mid(start, end - start);
+                    }
+                }
+                out << dotContent;
+            } else {
+                out << outputText;
+            }
+            
             outputFile.close();
             QMessageBox::information(this, "Success", "Output saved to:\n" + outputFilePath);
         } else {
@@ -632,4 +795,76 @@ string MainWindow::readFile(const string& filePath) {
     stringstream buffer;
     buffer << file.rdbuf();
     return buffer.str();
+}
+
+// Execute function from function_map
+void MainWindow::executeFunction(const string& funcName, bool allowFileDialog) {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    // If input is empty and file dialog is allowed, prompt user to select a file
+    if (inputText.isEmpty() && allowFileDialog) {
+        QString inputFilePath = QFileDialog::getOpenFileName(this, "Select XML File", "", 
+                                                            "XML Files (*.xml);;Text Files (*.txt);;All Files (*.*)");
+        
+        if (inputFilePath.isEmpty()) {
+            QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
+            return;
+        }
+        
+        string fileContent;
+        if (!extract_content(inputFilePath.toStdString(), fileContent)) {
+            QMessageBox::critical(this, "Error", "Failed to read file!");
+            return;
+        }
+        
+        inputText = QString::fromStdString(fileContent);
+        ui->textEdit->setText(inputText);
+    }
+    
+    // Check if input is still empty
+    if (inputText.isEmpty()) {
+        QMessageBox::information(this, "No Input", "Please provide XML input.");
+        return;
+    }
+    
+    // Check if function exists in map
+    if (function_map.find(funcName) == function_map.end()) {
+        ui->textEdit_2->setText("Error: Function '" + QString::fromStdString(funcName) + "' not found.");
+        return;
+    }
+    
+    try {
+        string input = inputText.toStdString();
+        
+        // Special handling for decompress - convert hex to binary
+        if (funcName == "decompress") {
+            // Check if input looks like hex
+            QString trimmedInput = inputText.trimmed();
+            if (QRegularExpression("^[0-9A-Fa-f\\s]+$").match(trimmedInput).hasMatch()) {
+                input = hexStringToBinary(trimmedInput.toStdString());
+                if (input.empty()) {
+                    ui->textEdit_2->setText("Error: Invalid hex format for decompression.");
+                    return;
+                }
+            }
+        }
+        
+        // Execute the function
+        string result = function_map[funcName](input);
+        
+        // Special handling for compress - display as hex
+        if (funcName == "compress") {
+            lastOutputWasBinary = true;
+            lastBinaryOutput = result;
+            QString hexOutput = binaryToHexString(result);
+            ui->textEdit_2->setText(hexOutput);
+        } else {
+            lastOutputWasBinary = false;
+            lastBinaryOutput.clear();
+            ui->textEdit_2->setText(QString::fromStdString(result));
+        }
+        
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
+    }
 }

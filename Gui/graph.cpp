@@ -1,4 +1,10 @@
 #include "graph.h"
+#include <QProcess>
+#include <QDebug>
+#include <QDir>
+#include <QCoreApplication>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -69,15 +75,67 @@ void exportToDot(const Graph& graph, const string& dotFile)
 }
 
 /*--------------------------------------------------
-  Render DOT using bundled Graphviz
+  Render DOT using Graphviz - FIXED VERSION
 --------------------------------------------------*/
 void renderGraph(const string& dotFile, const string& outputImage)
 {
-    // Use system-installed Graphviz (assumes dot is in PATH)
-    string command = "dot -Tjpg " + dotFile + " -o " + outputImage;
-    int ret = system(command.c_str());
-    if (ret != 0) {
-        cerr << "Error: Graphviz failed with exit code " << ret << endl;
+    // Try multiple possible locations for dot.exe
+    QStringList possiblePaths = {
+        "dot",  // If in PATH
+        "C:\\Program Files\\Graphviz\\bin\\dot.exe",
+        "C:\\Program Files (x86)\\Graphviz\\bin\\dot.exe",
+        "C:\\Program Files\\Graphviz 2.44\\bin\\dot.exe",
+        QCoreApplication::applicationDirPath() + "\\Graphviz\\bin\\dot.exe"
+    };
+    
+    QString dotPath;
+    QProcess testProcess;
+    
+    // Test each possible path
+    for (const QString& path : possiblePaths) {
+        testProcess.start(path, QStringList() << "-V");
+        if (testProcess.waitForFinished(1000)) {
+            if (testProcess.exitCode() == 0) {
+                dotPath = path;
+                qDebug() << "Found GraphViz at:" << dotPath;
+                break;
+            }
+        }
+        testProcess.close();
+    }
+    
+    if (dotPath.isEmpty()) {
+        qDebug() << "Error: GraphViz not found!";
+        qDebug() << "Please install GraphViz from: https://graphviz.org/download/";
+        qDebug() << "Or specify the full path to dot.exe";
+        return;
+    }
+    
+    // Now use the found path
+    QProcess process;
+    QStringList arguments;
+    arguments << "-Tjpg" << QString::fromStdString(dotFile) 
+              << "-o" << QString::fromStdString(outputImage);
+    
+    process.start(dotPath, arguments);
+    
+    if (!process.waitForStarted(3000)) {
+        qDebug() << "Error: Could not start GraphViz process";
+        return;
+    }
+    
+    if (!process.waitForFinished(10000)) { // 10 second timeout
+        qDebug() << "Error: GraphViz timeout";
+        process.kill();
+        return;
+    }
+    
+    if (process.exitCode() != 0) {
+        QString errorOutput = process.readAllStandardError();
+        qDebug() << "GraphViz error:" << errorOutput;
+        qDebug() << "Command:" << dotPath << arguments.join(" ");
+    } else {
+        qDebug() << "Graph successfully created:" << QString::fromStdString(outputImage);
     }
 }
 

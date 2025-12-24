@@ -62,17 +62,23 @@ private:
     std::string currentJpgFile;
     
     // Helper functions
-    void executeFunction(const std::string& funcName);
+    void executeFunction(const std::string& funcName, bool allowFileDialog = true);
     
     // Binary/Hex conversion
     QString binaryToHexString(const std::string& binaryData);
     std::string hexStringToBinary(const std::string& hexStr);
     
     // Graph helper functions
-    std::string generateDotContent(const std::string& xmlContent);  // Keep this for internal use
+    std::string generateDotContent(const std::string& xmlContent);
+    
+    // Image display function
+    void displayImageInGUI(const QString& imagePath);
     
     // Utility functions
     std::string readFile(const std::string& filePath);
+
+    protected:
+    void resizeEvent(QResizeEvent *event) override;
 };
 
 #endif // MAINWINDOW_H
