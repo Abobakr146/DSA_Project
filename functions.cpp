@@ -966,11 +966,10 @@ string draw(const string &xml)
 
 string most_active(const string &xml)
 {  
-    
     struct User {
         string id;
         string name;
-        int followCount = 0;
+        int postCount = 0;  // Changed from followCount to postCount
     };
 
     vector<User> users;
@@ -997,6 +996,11 @@ string most_active(const string &xml)
                         u.name += xml[i++];
                     i += 7;
                 }
+                else if (xml.substr(i, 6) == "<post>") {
+                    // Count posts
+                    u.postCount++;
+                    i += 6;
+                }
                 else {
                     i++;
                 }
@@ -1010,48 +1014,18 @@ string most_active(const string &xml)
         }
     }
 
-    // -------- 2) Count follow actions (FIXED) --------
-    i = 0;
-    bool insideFollowers = false;
-
-    while (i < xml.length()) {
-
-        if (xml.substr(i, 11) == "<followers>") {
-            insideFollowers = true;
-            i += 11;
-        }
-        else if (xml.substr(i, 12) == "</followers>") {
-            insideFollowers = false;
-            i += 12;
-        }
-        else if (insideFollowers && xml.substr(i, 4) == "<id>") {
-            i += 4;
-            string fid;
-            while (xml.substr(i, 5) != "</id>")
-                fid += xml[i++];
-            i += 5;
-
-            for (auto &u : users)
-                if (u.id == fid)
-                    u.followCount++;
-        }
-        else {
-            i++;
-        }
-    }
-
-    // -------- 3) Find max --------
-    int maxFollow = -1;
+    // -------- 2) Find max posts --------
+    int maxPosts = -1;
     for (auto &u : users)
-        if (u.followCount > maxFollow)
-            maxFollow = u.followCount;
+        if (u.postCount > maxPosts)
+            maxPosts = u.postCount;
 
-    // -------- 4) Build result string --------
+    // -------- 3) Build result string --------
     string result;
     for (auto &u : users) {
-        if (u.followCount == maxFollow && maxFollow > 0) {
+        if (u.postCount == maxPosts && maxPosts > 0) {
             if (!result.empty()) result += " | ";
-            result += "ID: " + u.id + ", Name: " + u.name;
+            result += "ID: " + u.id + ", Name: " + u.name + " (Posts: " + to_string(u.postCount) + ")";
         }
     }
 
