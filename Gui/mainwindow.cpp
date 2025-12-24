@@ -658,7 +658,7 @@ void MainWindow::on_pushButton_7_clicked() {
         return;
     }
     
-    // Check if we have DOT content in the output (from "map it" button)
+    // Check if we have DOT content in the output
     bool hasDotContent = (outputText.contains("digraph") || outputText.contains("graph")) && 
                          (outputText.contains("->") || outputText.contains("--"));
     
@@ -678,30 +678,8 @@ void MainWindow::on_pushButton_7_clicked() {
         if (QFile::copy(QString::fromStdString(currentDotFile), savePath)) {
             QMessageBox::information(this, "Success", 
                 "DOT file saved to:\n" + savePath);
-        } else {
-            // If copy fails, try to write the content directly
-            QFile outputFile(savePath);
-            if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-                QTextStream out(&outputFile);
-                // Try to extract just the DOT content from outputText
-                QString dotContent = outputText;
-                // Remove any additional text before/after the DOT content
-                if (dotContent.contains("digraph") && dotContent.contains("}")) {
-                    int start = dotContent.indexOf("digraph");
-                    int end = dotContent.lastIndexOf("}") + 1;
-                    if (start != -1 && end != -1 && end > start) {
-                        dotContent = dotContent.mid(start, end - start);
-                    }
-                }
-                out << dotContent;
-                outputFile.close();
-                QMessageBox::information(this, "Success", 
-                    "DOT content saved to:\n" + savePath);
-            } else {
-                QMessageBox::critical(this, "Error", "Failed to save DOT file!");
-            }
+            return;
         }
-        return;
     }
     
     // Otherwise save text output
@@ -710,78 +688,54 @@ void MainWindow::on_pushButton_7_clicked() {
         return;
     }
     
-    QString filter;
-    QString defaultExtension;
-    
     // Determine file type based on content
+    QString filter;
+    
     if (hasDotContent) {
         filter = "DOT Graph Files (*.dot);;Text Files (*.txt);;All Files (*.*)";
-        defaultExtension = ".dot";
     } else if (outputText.contains("{\"") && outputText.contains("}")) {
         filter = "JSON Files (*.json);;Text Files (*.txt);;All Files (*.*)";
-        defaultExtension = ".json";
-    } else if (outputText.contains("XML is valid") || outputText.contains("Error at line")) {
-        filter = "Text Files (*.txt);;Log Files (*.log);;All Files (*.*)";
-        defaultExtension = ".txt";
     } else if (outputText.contains("<") && outputText.contains(">")) {
         filter = "XML Files (*.xml);;Text Files (*.txt);;All Files (*.*)";
-        defaultExtension = ".xml";
-    } else if (lastOutputWasBinary || 
-               (outputText.length() > 0 && 
-                QRegularExpression("^[0-9A-F]{2}( [0-9A-F]{2})*$").match(outputText).hasMatch())) {
-        filter = "Binary Files (*.bin);;Hex Files (*.hex);;Text Files (*.txt);;All Files (*.*)";
-        defaultExtension = ".bin";
     } else {
+        // DEFAULT: Just save as text file
         filter = "Text Files (*.txt);;All Files (*.*)";
-        defaultExtension = ".txt";
     }
     
     QString outputFilePath = QFileDialog::getSaveFileName(this, 
         "Save Output File", 
-        "output" + defaultExtension, 
+        "output.txt", 
         filter);
 
     if (outputFilePath.isEmpty()) {
         return;
     }
 
-    // Handle binary output
-    if (lastOutputWasBinary && !lastBinaryOutput.empty()) {
-        QFile outputFile(outputFilePath);
-        if (outputFile.open(QIODevice::WriteOnly)) {
-            outputFile.write(lastBinaryOutput.c_str(), lastBinaryOutput.size());
-            outputFile.close();
-            QMessageBox::information(this, "Success", "Binary file saved to:\n" + outputFilePath);
-        } else {
-            QMessageBox::critical(this, "Error", "Unable to save binary file!");
-        }
-    } else {
-        // Handle text output
-        QFile outputFile(outputFilePath);
-        if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            QTextStream out(&outputFile);
-            
-            // For DOT files, extract just the graph content if it's mixed with other text
-            if (hasDotContent && outputFilePath.endsWith(".dot", Qt::CaseInsensitive)) {
-                QString dotContent = outputText;
-                // Try to extract just the graph definition
-                if (dotContent.contains("digraph") && dotContent.contains("}")) {
-                    int start = dotContent.indexOf("digraph");
-                    int end = dotContent.lastIndexOf("}") + 1;
-                    if (start != -1 && end != -1 && end > start) {
-                        dotContent = dotContent.mid(start, end - start);
-                    }
+    // Handle text output
+    QFile outputFile(outputFilePath);
+    if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&outputFile);
+        
+        // For DOT files, extract just the graph content if it's mixed with other text
+        if (hasDotContent && outputFilePath.endsWith(".dot", Qt::CaseInsensitive)) {
+            QString dotContent = outputText;
+            // Try to extract just the graph definition
+            if (dotContent.contains("digraph") && dotContent.contains("}")) {
+                int start = dotContent.indexOf("digraph");
+                int end = dotContent.lastIndexOf("}") + 1;
+                if (start != -1 && end != -1 && end > start) {
+                    dotContent = dotContent.mid(start, end - start);
                 }
-                out << dotContent;
-            } else {
-                out << outputText;
             }
-            
-            outputFile.close();
-            QMessageBox::information(this, "Success", "Output saved to:\n" + outputFilePath);
+            out << dotContent;
         } else {
-            QMessageBox::critical(this, "Error", "Unable to save output file!");
+            out << outputText;
         }
+        
+        outputFile.close();
+        QMessageBox::information(this, "Success", "Output saved to:\n" + outputFilePath);
+    } else {
+        QMessageBox::critical(this, "Error", "Unable to save output file!");
     }
 }
 
