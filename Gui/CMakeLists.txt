@@ -18,7 +18,14 @@ add_executable(XmlGui WIN32
     mainwindow.cpp
     functions.cpp
     utils.cpp
+    graph.cpp	
+    external/tinyxml2/tinyxml2.cpp
 )
 
 # Link against Qt libraries
 target_link_libraries(XmlGui PRIVATE Qt6::Widgets)
+
+# Add include directory for TinyXML2
+target_include_directories(XmlGui PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyxml2
+)

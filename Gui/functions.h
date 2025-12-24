@@ -23,6 +23,21 @@ struct DictionaryEntry
     unsigned char second;
 };
 
+// Class for posts
+class Post {
+private:
+    vector<string> post_Topics;
+    string post_Content;
+    
+public:
+    // Constructor declaration
+    Post(vector<string> topics, string content);
+    
+    // Method declarations
+    vector<string> getTopics();
+    string getContent();
+};
+
 // Global container to store the replacement dictionary
 extern vector<DictionaryEntry> BPE_DICTIONARY;
 
@@ -36,7 +51,7 @@ string bytesToString(const vector<unsigned char> &bytes);
 // --- XML Processing Functions ---
 string verify(const string &xml);
 string trim_copy(const string& s);
-string extract_tag_name(const string& tag) ;
+string extract_tag_name(const string& tag);
 string format(const string &xml);
 string json(const string &xml);
 string mini(const string &xml);
@@ -47,7 +62,9 @@ string fixation(const string &xml);
 string most_active(const string &xml);
 string most_influencer(const string &xml);
 string mutual(const string &xml, const vector<int> &ids);
-string suggest(const string &xml);
-string search(const string &xml);
+string suggest(const string &xml, int userId);
+vector<string> searchPostsByWord(const string& xml, const string& word);
+vector<string> searchPostsByTopic(const string& xml, const string& topic);
+vector<int> strIDs2int(const string &ids);
 
 #endif

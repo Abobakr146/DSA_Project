@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "functions.h"
 #include "utils.h"
+#include "graph.h"
 #include <QFileDialog>
 #include <QFile>
 #include <QTextStream>
@@ -9,41 +10,49 @@
 #include <QDir>
 #include <QPixmap>
 #include <QRegularExpression>
+#include <QDateTime>
 #include <map>
 #include <functional>
 #include <string>
 #include <iostream>
-#include <cstdlib>  // For strtol
+#include <cstdlib>
+#include <sstream>
+#include <vector>
+#include <fstream>
 
 using namespace std;
 
-// Map to hold function pointers from functions.h
+// Map to hold function pointers from functions.h (except draw)
 map<string, function<string(const string &)>> function_map;
 // Track if last output was binary (for compression/decompression)
 bool lastOutputWasBinary = false;
 string lastBinaryOutput;
+// Current graph files
+string currentDotFile;
+string currentJpgFile;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->imageLabel->setVisible(false);
     
-    // Initialize function map with all functions from functions.h
+    // Set placeholders for search bars
+    ui->lineEdit_mutual->setPlaceholderText("Enter comma-separated user IDs (e.g., 1,2,3)");
+    ui->lineEdit_suggest->setPlaceholderText("Enter a single user ID (e.g., 1)");
+    ui->lineEdit_postSearch->setPlaceholderText("Enter word or topic to search in posts");
+    
+    // Initialize function map with all functions from functions.h EXCEPT draw
     function_map["verify"] = verify;
     function_map["format"] = format;
     function_map["json"] = json;
     function_map["mini"] = mini;
     function_map["compress"] = compress;
     function_map["decompress"] = decompress;
-    function_map["draw"] = draw;
     function_map["fixation"] = fixation;
     function_map["most_active"] = most_active;
     function_map["most_influencer"] = most_influencer;
-    function_map["mutual"] = mutual;
-    function_map["suggest"] = suggest;
-    function_map["search"] = static_cast<string(*)(const string&)>(search);
+    // Note: draw is NOT in function_map - handled separately
 }
 
 MainWindow::~MainWindow()
@@ -52,14 +61,11 @@ MainWindow::~MainWindow()
 }
 
 // Display binary data as clean hex string
-QString binaryToHexString(const string& binaryData) {
+QString MainWindow::binaryToHexString(const string& binaryData) {
     QString hexString;
     
     for (size_t i = 0; i < binaryData.size(); i++) {
-        // Format as 2-digit hex with leading zero, uppercase
         hexString += QString("%1").arg((unsigned char)binaryData[i], 2, 16, QChar('0')).toUpper();
-        
-        // Add space between bytes for readability
         if (i < binaryData.size() - 1) {
             hexString += " ";
         }
@@ -69,23 +75,20 @@ QString binaryToHexString(const string& binaryData) {
 }
 
 // Convert hex string back to binary
-string hexStringToBinary(const string& hexStr) {
+string MainWindow::hexStringToBinary(const string& hexStr) {
     string binary;
     string hexChars;
     
-    // Remove spaces from hex string
     for (char c : hexStr) {
         if (c != ' ') {
             hexChars += c;
         }
     }
     
-    // Check if length is even (2 chars per byte)
     if (hexChars.length() % 2 != 0) {
         return "";
     }
     
-    // Convert hex pairs to bytes
     for (size_t i = 0; i < hexChars.length(); i += 2) {
         string byteStr = hexChars.substr(i, 2);
         char byte = (char)strtol(byteStr.c_str(), nullptr, 16);
@@ -99,12 +102,11 @@ string hexStringToBinary(const string& hexStr) {
 void MainWindow::executeFunction(const string& funcName) {
     QString inputText = ui->textEdit->toPlainText();
     
-    // Reset binary flag
     lastOutputWasBinary = false;
     lastBinaryOutput.clear();
     
-    // If no input in text field, try to open a file
-    if (inputText.isEmpty()) {
+    // For compression/decompression functions, allow file selection if input is empty
+    if (inputText.isEmpty() && (funcName == "compress" || funcName == "decompress")) {
         QString filter;
         if (funcName == "decompress") {
             filter = "Hex Files (*.hex);;Text Files (*.txt);;All Files (*.*)";
@@ -120,7 +122,269 @@ void MainWindow::executeFunction(const string& funcName) {
             return;
         }
         
-        // Read file using utils.h function
+        string fileContent;
+        if (!extract_content(inputFilePath.toStdString(), fileContent)) {
+            QMessageBox::critical(this, "Error", "Failed to read file!");
+            return;
+        }
+        
+        inputText = QString::fromStdString(fileContent);
+        ui->textEdit->setText(inputText);
+    }
+    // For other functions (including map it), just require input in the text field
+    else if (inputText.isEmpty()) {
+        QMessageBox::information(this, "No Input", "Please provide input in the text field.");
+        return;
+    }
+    
+    try {
+        string inputStdString;
+        
+        if (funcName == "decompress") {
+            string hexData = inputText.toStdString();
+            inputStdString = hexStringToBinary(hexData);
+            
+            if (inputStdString.empty()) {
+                ui->textEdit_2->setText("Error: Invalid hex input for decompression!");
+                return;
+            }
+        } else {
+            inputStdString = inputText.toStdString();
+        }
+        
+        string result = function_map[funcName](inputStdString);
+        
+        if (result.empty()) {
+            ui->textEdit_2->setText("This function is not yet implemented!");
+            return;
+        }
+        
+        if (funcName == "compress") {
+            lastOutputWasBinary = true;
+            lastBinaryOutput = result;
+            ui->textEdit_2->setText(binaryToHexString(result));
+        } else if (funcName == "decompress") {
+            if (result.find("<") != string::npos) {
+                ui->textEdit_2->setText(QString::fromStdString(result));
+            } else {
+                lastOutputWasBinary = true;
+                lastBinaryOutput = result;
+                ui->textEdit_2->setText(binaryToHexString(result));
+            }
+        } else {
+            ui->textEdit_2->setText(QString::fromStdString(result));
+        }
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
+    }
+}
+
+// Generate and show ONLY DOT content (no extra text) - for "map it" button
+string MainWindow::generateDotContent(const string& xmlContent) {
+    try {
+        QDateTime now = QDateTime::currentDateTime();
+        QString timestamp = now.toString("yyyyMMdd_hhmmss");
+        currentDotFile = "graph_" + timestamp.toStdString() + ".dot";
+        currentJpgFile = "graph_" + timestamp.toStdString() + ".jpg";
+        
+        Graph graph = buildGraphFromXML(xmlContent);
+        
+        if (graph.empty()) {
+            return "Error: No user/follower data found in XML.";
+        }
+        
+        exportToDot(graph, currentDotFile);
+        
+        ifstream dotIn(currentDotFile);
+        if (!dotIn.is_open()) {
+            return "Error: Could not create DOT file.";
+        }
+        
+        stringstream dotContent;
+        dotContent << dotIn.rdbuf();
+        dotIn.close();
+        
+        // Return ONLY the DOT content, nothing else
+        return dotContent.str();
+        
+    } catch (const exception& e) {
+        return string("Error: ") + e.what();
+    }
+}
+
+// "map it" button handler - Generates DOT from input XML
+void MainWindow::on_pushButton_8_clicked() {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    if (inputText.isEmpty()) {
+        QMessageBox::information(this, "No Input", "Please provide XML input in the text field.");
+        return;
+    }
+    
+    try {
+        string dotContent = generateDotContent(inputText.toStdString());
+        
+        if (dotContent.find("Error:") == 0) {
+            ui->textEdit_2->setText(QString::fromStdString(dotContent));
+        } else {
+            // Show ONLY the DOT content
+            ui->textEdit_2->setText(QString::fromStdString(dotContent));
+        }
+        
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
+    }
+}
+
+// "to jpg" button handler - Converts DOT to JPG
+void MainWindow::on_pushButton_15_clicked() {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    if (inputText.isEmpty()) {
+        QMessageBox::information(this, "No Input", 
+            "Please provide DOT content in the input field or generate it using 'map it'.");
+        return;
+    }
+    
+    try {
+        QString dotContent = inputText;
+        
+        // Check if the input looks like DOT content
+        if (!dotContent.contains("digraph") && !dotContent.contains("->")) {
+            QMessageBox::warning(this, "Invalid Input", 
+                "Input doesn't appear to be valid DOT content.\n"
+                "Please generate DOT content using 'map it' first.");
+            return;
+        }
+        
+        // Save DOT content to a temporary file
+        QDateTime now = QDateTime::currentDateTime();
+        QString timestamp = now.toString("yyyyMMdd_hhmmss");
+        QString tempDotFile = "temp_graph_" + timestamp + ".dot";
+        QString tempJpgFile = "graph_" + timestamp + ".jpg";
+        
+        QFile dotFile(tempDotFile);
+        if (dotFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&dotFile);
+            out << dotContent;
+            dotFile.close();
+        } else {
+            ui->textEdit_2->setText("Error: Could not create temporary DOT file.");
+            return;
+        }
+        
+        // Ask user where to save the JPG
+        QString savePath = QFileDialog::getSaveFileName(this, 
+            "Save Graph as JPG", 
+            "graph.jpg", 
+            "JPEG Images (*.jpg *.jpeg);;PNG Images (*.png);;All Files (*.*)");
+        
+        if (savePath.isEmpty()) {
+            // Clean up temp file
+            QFile::remove(tempDotFile);
+            return;
+        }
+        
+        // Convert DOT to JPG
+        renderGraph(tempDotFile.toStdString(), savePath.toStdString());
+        
+        // Clean up temp file
+        QFile::remove(tempDotFile);
+        
+        // Update current files
+        currentDotFile = tempDotFile.toStdString();
+        currentJpgFile = savePath.toStdString();
+        
+        QMessageBox::information(this, "Success", 
+            "Graph saved as JPG:\n" + savePath);
+            
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
+    }
+}
+
+// "View Graph" button handler - Uses drawXMLGraph
+void MainWindow::on_pushButton_14_clicked() {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    if (inputText.isEmpty()) {
+        QMessageBox::information(this, "No Input", "Please provide XML input in the text field.");
+        return;
+    }
+    
+    try {
+        QDateTime now = QDateTime::currentDateTime();
+        QString timestamp = now.toString("yyyyMMdd_hhmmss");
+        currentJpgFile = "graph_" + timestamp.toStdString() + ".jpg";
+        
+        string xmlContent = inputText.toStdString();
+        
+        // Use the drawXMLGraph function from graph.h
+        drawXMLGraph(xmlContent, currentJpgFile);
+        
+        // Show success message
+        QString result = "✓ Graph generated successfully!\n";
+        result += "Image saved as: " + QString::fromStdString(currentJpgFile) + "\n";
+        result += "You can find the image in the application directory.";
+        
+        ui->textEdit_2->setText(result);
+        
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
+    }
+}
+
+// === XML Operations ===
+void MainWindow::on_pushButton_clicked() { 
+    executeFunction("verify"); 
+}
+
+void MainWindow::on_pushButton_2_clicked() { 
+    executeFunction("json"); 
+}
+
+void MainWindow::on_pushButton_3_clicked() { 
+    executeFunction("compress"); 
+}
+
+void MainWindow::on_pushButton_4_clicked() { 
+    executeFunction("decompress"); 
+}
+
+void MainWindow::on_pushButton_5_clicked() { 
+    executeFunction("mini"); 
+}
+
+void MainWindow::on_pushButton_6_clicked() { 
+    executeFunction("format"); 
+}
+
+void MainWindow::on_pushButton_fixation_clicked() { 
+    executeFunction("fixation"); 
+}
+
+// === Network Analysis ===
+void MainWindow::on_pushButton_11_clicked() { 
+    executeFunction("most_active"); 
+}
+
+void MainWindow::on_pushButton_9_clicked() { 
+    executeFunction("most_influencer"); 
+}
+
+// Mutual Users
+void MainWindow::on_pushButton_mutual_clicked() {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    if (inputText.isEmpty()) {
+        QString inputFilePath = QFileDialog::getOpenFileName(this, 
+            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
+        
+        if (inputFilePath.isEmpty()) {
+            QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
+            return;
+        }
+        
         string fileContent;
         if (!extract_content(inputFilePath.toStdString(), fileContent)) {
             QMessageBox::critical(this, "Error", "Failed to read file!");
@@ -131,160 +395,187 @@ void MainWindow::executeFunction(const string& funcName) {
         ui->textEdit->setText(inputText);
     }
     
-    // Now process the input text
+    QString idsInput = ui->lineEdit_mutual->text();
+    if (idsInput.isEmpty()) {
+        QMessageBox::warning(this, "Input Error", 
+            "Please enter user IDs (comma-separated) in the search field.");
+        return;
+    }
+    
+    vector<int> ids = strIDs2int(idsInput.toStdString());
+    if (ids.empty()) {
+        ui->textEdit_2->setText("Error: No valid user IDs provided.");
+        return;
+    }
+    
     try {
-        string inputStdString;
+        string result = mutual(inputText.toStdString(), ids);
+        ui->textEdit_2->setText(QString::fromStdString(result));
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
+    }
+}
+
+// Suggested Users
+void MainWindow::on_pushButton_suggest_clicked() {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    if (inputText.isEmpty()) {
+        QString inputFilePath = QFileDialog::getOpenFileName(this, 
+            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
         
-        if (funcName == "decompress") {
-            // For decompression, convert hex to binary
-            string hexData = inputText.toStdString();
-            inputStdString = hexStringToBinary(hexData);
-            
-            if (inputStdString.empty()) {
-                ui->textEdit_2->setText("Error: Invalid hex input for decompression!");
-                return;
-            }
-        } else {
-            // For other functions, use text as-is
-            inputStdString = inputText.toStdString();
-        }
-        
-        // Execute the function
-        string result = function_map[funcName](inputStdString);
-        
-        if (result.empty()) {
-            ui->textEdit_2->setText("This function is not yet implemented!");
+        if (inputFilePath.isEmpty()) {
+            QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
             return;
         }
         
-        // Handle output
-        if (funcName == "compress") {
-            // Compression: show hex
-            lastOutputWasBinary = true;
-            lastBinaryOutput = result;
-            ui->textEdit_2->setText(binaryToHexString(result));
-        } else if (funcName == "decompress") {
-            // Decompression: check if result is XML
-            if (result.find("<") != string::npos) {
-                // Looks like XML - show as text
-                ui->textEdit_2->setText(QString::fromStdString(result));
-            } else {
-                // Still binary - show as hex
-                lastOutputWasBinary = true;
-                lastBinaryOutput = result;
-                ui->textEdit_2->setText(binaryToHexString(result));
-            }
+        string fileContent;
+        if (!extract_content(inputFilePath.toStdString(), fileContent)) {
+            QMessageBox::critical(this, "Error", "Failed to read file!");
+            return;
+        }
+        
+        inputText = QString::fromStdString(fileContent);
+        ui->textEdit->setText(inputText);
+    }
+    
+    QString userIdInput = ui->lineEdit_suggest->text();
+    if (userIdInput.isEmpty()) {
+        QMessageBox::warning(this, "Input Error", 
+            "Please enter a single user ID in the search field.");
+        return;
+    }
+    
+    vector<int> ids = strIDs2int(userIdInput.toStdString());
+    if (ids.empty()) {
+        ui->textEdit_2->setText("Error: Please enter a valid user ID.");
+        return;
+    }
+    
+    if (ids.size() > 1) {
+        ui->textEdit_2->setText("Error: Please enter only ONE user ID.");
+        return;
+    }
+    
+    int userId = ids[0];
+    
+    try {
+        string result = suggest(inputText.toStdString(), userId);
+        ui->textEdit_2->setText(QString::fromStdString(result));
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
+    }
+}
+
+// Search posts by word
+void MainWindow::on_pushButton_searchWord_clicked() {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    if (inputText.isEmpty()) {
+        QString inputFilePath = QFileDialog::getOpenFileName(this, 
+            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
+        
+        if (inputFilePath.isEmpty()) {
+            QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
+            return;
+        }
+        
+        string fileContent;
+        if (!extract_content(inputFilePath.toStdString(), fileContent)) {
+            QMessageBox::critical(this, "Error", "Failed to read file!");
+            return;
+        }
+        
+        inputText = QString::fromStdString(fileContent);
+        ui->textEdit->setText(inputText);
+    }
+    
+    QString word = ui->lineEdit_postSearch->text();
+    if (word.isEmpty()) {
+        QMessageBox::warning(this, "Input Error", 
+            "Please enter a word to search in posts.");
+        return;
+    }
+    
+    try {
+        vector<string> results = searchPostsByWord(inputText.toStdString(), word.toStdString());
+        
+        if (results.empty()) {
+            ui->textEdit_2->setText("No posts found containing: \"" + word + "\"");
         } else {
-            // Other functions: show as text
-            ui->textEdit_2->setText(QString::fromStdString(result));
+            QString output = "Found " + QString::number(results.size()) + " post(s):\n\n";
+            for (size_t i = 0; i < results.size(); i++) {
+                output += "Post " + QString::number(i + 1) + ":\n";
+                output += QString::fromStdString(results[i]) + "\n";
+                output += "---\n";
+            }
+            ui->textEdit_2->setText(output);
         }
     } catch (const exception& e) {
         ui->textEdit_2->setText("Error: " + QString(e.what()));
     }
 }
 
-// === XML Operations ===
-void MainWindow::on_pushButton_clicked() // is_balanced (verify)
-{
-    executeFunction("verify");
-}
-
-void MainWindow::on_pushButton_2_clicked() // To json
-{
-    executeFunction("json");
-}
-
-void MainWindow::on_pushButton_3_clicked() // compression
-{
-    executeFunction("compress");
-}
-
-void MainWindow::on_pushButton_4_clicked() // decompression
-{
-    executeFunction("decompress");
-}
-
-void MainWindow::on_pushButton_5_clicked() // minifying
-{
-    executeFunction("mini");
-}
-
-void MainWindow::on_pushButton_6_clicked() // prettify (format)
-{
-    executeFunction("format");
-}
-
-// === Network Analysis ===
-void MainWindow::on_pushButton_11_clicked() // most active
-{
-    executeFunction("most_active");
-}
-
-void MainWindow::on_pushButton_9_clicked() // most influencer
-{
-    executeFunction("most_influencer");
-}
-
-void MainWindow::on_pushButton_10_clicked() // mutual users
-{
-    executeFunction("mutual");
-}
-
-void MainWindow::on_pushButton_12_clicked() // suggested users
-{
-    executeFunction("suggest");
-}
-
-void MainWindow::on_pushButton_13_clicked() // search
-{
-    QString word = ui->lineEdit->text();
-    if (word.isEmpty()) {
-        QMessageBox::warning(this, "Input Error", "Please enter a word to search.");
+// Search posts by topic
+void MainWindow::on_pushButton_searchTopic_clicked() {
+    QString inputText = ui->textEdit->toPlainText();
+    
+    if (inputText.isEmpty()) {
+        QString inputFilePath = QFileDialog::getOpenFileName(this, 
+            "Select Input File", "", "XML Files (*.xml);;TXT Files (*.txt);;All Files (*.*)");
+        
+        if (inputFilePath.isEmpty()) {
+            QMessageBox::information(this, "No Input", "Please provide XML input or select a file.");
+            return;
+        }
+        
+        string fileContent;
+        if (!extract_content(inputFilePath.toStdString(), fileContent)) {
+            QMessageBox::critical(this, "Error", "Failed to read file!");
+            return;
+        }
+        
+        inputText = QString::fromStdString(fileContent);
+        ui->textEdit->setText(inputText);
+    }
+    
+    QString topic = ui->lineEdit_postSearch->text();
+    if (topic.isEmpty()) {
+        QMessageBox::warning(this, "Input Error", 
+            "Please enter a topic to search in posts.");
         return;
     }
     
-    executeFunction("search");
-    
-    if (!ui->textEdit_2->toPlainText().contains("not yet implemented")) {
-        ui->textEdit_2->append("\n\nNote: Searched for word: " + word);
+    try {
+        vector<string> results = searchPostsByTopic(inputText.toStdString(), topic.toStdString());
+        
+        if (results.empty()) {
+            ui->textEdit_2->setText("No posts found with topic: \"" + topic + "\"");
+        } else {
+            QString output = "Found " + QString::number(results.size()) + " post(s):\n\n";
+            for (size_t i = 0; i < results.size(); i++) {
+                output += "Post " + QString::number(i + 1) + ":\n";
+                output += QString::fromStdString(results[i]) + "\n";
+                output += "---\n";
+            }
+            ui->textEdit_2->setText(output);
+        }
+    } catch (const exception& e) {
+        ui->textEdit_2->setText("Error: " + QString(e.what()));
     }
-}
-
-// === Visualization ===
-void MainWindow::on_pushButton_8_clicked() // map to DOT (draw)
-{
-    executeFunction("draw");
-}
-
-void MainWindow::on_pushButton_15_clicked() // to jpg
-{
-    executeFunction("draw");
-    
-    QString output = ui->textEdit_2->toPlainText();
-    if (!output.contains("not yet implemented") && !output.isEmpty()) {
-        QMessageBox::information(this, "Graph Visualization", 
-            "DOT file generated!\nUse 'Save' to save as .dot file.");
-    }
-}
-
-void MainWindow::on_pushButton_14_clicked() // close image
-{
-    ui->imageLabel->setVisible(false);
 }
 
 // === Save Output ===
-void MainWindow::on_pushButton_7_clicked() // save
-{
+void MainWindow::on_pushButton_7_clicked() { 
     QString outputText = ui->textEdit_2->toPlainText();
     
-    if (outputText.isEmpty() || outputText.contains("not yet implemented")) {
-        QMessageBox::information(this, "No Output", "There is no valid output to save.");
+    if (outputText.isEmpty()) {
+        QMessageBox::information(this, "No Output", "There is no output to save.");
         return;
     }
     
     QString filter;
     
-    // Determine file type based on content
     if (outputText.contains("{\"") && outputText.contains("}")) {
         filter = "JSON Files (*.json);;Text Files (*.txt);;All Files (*.*)";
     } else if (outputText.contains("digraph") || outputText.contains("->")) {
@@ -296,7 +587,6 @@ void MainWindow::on_pushButton_7_clicked() // save
     } else if (lastOutputWasBinary || 
                (outputText.length() > 0 && 
                 QRegularExpression("^[0-9A-F]{2}( [0-9A-F]{2})*$").match(outputText).hasMatch())) {
-        // Looks like hex data (compression/decompression output)
         filter = "Hex Files (*.hex);;Text Files (*.txt);;All Files (*.*)";
     } else {
         filter = "Text Files (*.txt);;All Files (*.*)";
@@ -306,23 +596,20 @@ void MainWindow::on_pushButton_7_clicked() // save
         "Save Output File", "", filter);
 
     if (outputFilePath.isEmpty()) {
-        QMessageBox::information(this, "No File Selected", "Please select a location to save the output.");
         return;
     }
 
     if (lastOutputWasBinary && !lastBinaryOutput.empty()) {
-        // Save as .hex file (text file with hex content)
         QFile outputFile(outputFilePath);
         if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&outputFile);
-            out << outputText;  // Save hex text
+            out << outputText;
             outputFile.close();
-            QMessageBox::information(this, "Success", "Hex data saved to:\n" + outputFilePath);
+            QMessageBox::information(this, "Success", "File saved to:\n" + outputFilePath);
         } else {
             QMessageBox::critical(this, "Error", "Unable to save file!");
         }
     } else {
-        // Save text data
         QFile outputFile(outputFilePath);
         if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&outputFile);
@@ -333,4 +620,16 @@ void MainWindow::on_pushButton_7_clicked() // save
             QMessageBox::critical(this, "Error", "Unable to save output file!");
         }
     }
+}
+
+// Utility function to read file
+string MainWindow::readFile(const string& filePath) {
+    ifstream file(filePath);
+    if (!file.is_open()) {
+        return "";
+    }
+    
+    stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
 }

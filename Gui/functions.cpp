@@ -2,10 +2,6 @@
 #include "graph.h"
 using namespace std;
 
-// Global variables for verify function
-string verifyResult = "";
-string verifyError = "";
-
 // ==================== Implement Post class functions ====================
 // Constructor implementation
 Post::Post(vector<string> topics, string content) {
@@ -149,7 +145,6 @@ bool oneIterationBPE(vector<unsigned char> &data, unsigned char &nextFreeByte)
 string verify(const string &xml) {
     stack<string> tagStack;
     string result = "";
-    string error = "";
     int i = 0;
     int lineNum = 1;
     int numberOfErrors = 0;
@@ -178,7 +173,7 @@ string verify(const string &xml) {
             }
 
             if (!hasMatchingOpen) {
-                error += "Error at line " + to_string(lineNum) + ": Missing '<' for '>'\n";
+                result += "Error at line " + to_string(lineNum) + ": Missing '<' for '>'\n";
                 numberOfErrors++;
             }
             i++;
@@ -188,7 +183,7 @@ string verify(const string &xml) {
             int tagEnd = xml.find_first_of('>', i);
             
             if ((nextOpenTag != string::npos && nextOpenTag < tagEnd) || tagEnd == string::npos) {
-                error += "Error at line " + to_string(lineNum) + ": Unclosed tag bracket\n";
+                result += "Error at line " + to_string(lineNum) + ": Unclosed tag bracket\n";
                 numberOfErrors++;
                 i++;  // Move forward to avoid infinite loop
                 continue;
@@ -199,7 +194,7 @@ string verify(const string &xml) {
             if (tagContent[0] == '?') {
                 // XML declaration must end with '?'
                 if (tagContent.back() != '?') {
-                    error += "Error at line " + to_string(lineNum) + ": Malformed XML declaration\n";
+                    result += "Error at line " + to_string(lineNum) + ": Malformed XML declaration\n";
                     numberOfErrors++;
                 }
                 i = tagEnd + 1;
@@ -221,12 +216,12 @@ string verify(const string &xml) {
                 }
                 
                 if (tagStack.empty()) {
-                    error += "Error at line " + to_string(lineNum) + ": No matching opening tag for </" + closingTag + ">\n";
+                    result += "Error at line " + to_string(lineNum) + ": No matching opening tag for </" + closingTag + ">\n";
                     numberOfErrors++;
                 } else {
                     string expectedTag = tagStack.top();
                     if (expectedTag != closingTag) {
-                        error += "Error at line " + to_string(lineNum) + ": Mismatched tags\n";
+                        result += "Error at line " + to_string(lineNum) + ": Mismatched tags\n";
                         numberOfErrors++;
                     } else {
                         tagStack.pop();
@@ -250,9 +245,9 @@ string verify(const string &xml) {
     
     // check for unclosed tags
     if (!tagStack.empty()) {
-        error += "Error: Unclosed tags found:\n";
+        result += "Error: Unclosed tags found:\n";
         while (!tagStack.empty()) {
-            error += "  - <" + tagStack.top() + ">\n";
+            result += "  - <" + tagStack.top() + ">\n";
             tagStack.pop();
             numberOfErrors++;
         }
@@ -263,12 +258,9 @@ string verify(const string &xml) {
         result = "Valid";
         cout << result << endl;
     } else {
-        result = "Invalid\nTotal Errors: " + to_string(numberOfErrors) + "\n";
-        cout << result << endl << error << endl;
+        result = "Invalid\nTotal Errors: " + to_string(numberOfErrors) + "\n" + result;
+        cout << result << endl;
     }
-
-    verifyResult = result;
-    verifyError = error;
     
     return xml;
 }
@@ -1400,4 +1392,3 @@ vector<int> strIDs2int(const string &ids) {
 
     return Ids;
 }
-

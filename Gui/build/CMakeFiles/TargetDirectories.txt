@@ -1,5 +1,0 @@
-C:/Users/alima/OneDrive/Desktop/DSA_Project/Gui/build/CMakeFiles/XmlGui.dir
-C:/Users/alima/OneDrive/Desktop/DSA_Project/Gui/build/CMakeFiles/edit_cache.dir
-C:/Users/alima/OneDrive/Desktop/DSA_Project/Gui/build/CMakeFiles/rebuild_cache.dir
-C:/Users/alima/OneDrive/Desktop/DSA_Project/Gui/build/CMakeFiles/XmlGui_autogen_timestamp_deps.dir
-C:/Users/alima/OneDrive/Desktop/DSA_Project/Gui/build/CMakeFiles/XmlGui_autogen.dir
