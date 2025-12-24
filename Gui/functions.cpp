@@ -1,6 +1,26 @@
 #include "functions.h"
-
+#include "graph.h"
 using namespace std;
+
+// Global variables for verify function
+string verifyResult = "";
+string verifyError = "";
+
+// ==================== Implement Post class functions ====================
+// Constructor implementation
+Post::Post(vector<string> topics, string content) {
+    post_Topics = topics;
+    post_Content = content;
+}
+
+// Method implementations
+vector<string> Post::getTopics() {
+    return post_Topics;
+}
+
+string Post::getContent() {
+    return post_Content;
+}
 
 // Global BPE Dictionary
 vector<DictionaryEntry> BPE_DICTIONARY;
@@ -129,6 +149,7 @@ bool oneIterationBPE(vector<unsigned char> &data, unsigned char &nextFreeByte)
 string verify(const string &xml) {
     stack<string> tagStack;
     string result = "";
+    string error = "";
     int i = 0;
     int lineNum = 1;
     int numberOfErrors = 0;
@@ -157,7 +178,7 @@ string verify(const string &xml) {
             }
 
             if (!hasMatchingOpen) {
-                result += "Error at line " + to_string(lineNum) + ": Missing '<' for '>'\n";
+                error += "Error at line " + to_string(lineNum) + ": Missing '<' for '>'\n";
                 numberOfErrors++;
             }
             i++;
@@ -167,7 +188,7 @@ string verify(const string &xml) {
             int tagEnd = xml.find_first_of('>', i);
             
             if ((nextOpenTag != string::npos && nextOpenTag < tagEnd) || tagEnd == string::npos) {
-                result += "Error at line " + to_string(lineNum) + ": Unclosed tag bracket\n";
+                error += "Error at line " + to_string(lineNum) + ": Unclosed tag bracket\n";
                 numberOfErrors++;
                 i++;  // Move forward to avoid infinite loop
                 continue;
@@ -178,7 +199,7 @@ string verify(const string &xml) {
             if (tagContent[0] == '?') {
                 // XML declaration must end with '?'
                 if (tagContent.back() != '?') {
-                    result += "Error at line " + to_string(lineNum) + ": Malformed XML declaration\n";
+                    error += "Error at line " + to_string(lineNum) + ": Malformed XML declaration\n";
                     numberOfErrors++;
                 }
                 i = tagEnd + 1;
@@ -200,12 +221,12 @@ string verify(const string &xml) {
                 }
                 
                 if (tagStack.empty()) {
-                    result += "Error at line " + to_string(lineNum) + ": No matching opening tag for </" + closingTag + ">\n";
+                    error += "Error at line " + to_string(lineNum) + ": No matching opening tag for </" + closingTag + ">\n";
                     numberOfErrors++;
                 } else {
                     string expectedTag = tagStack.top();
                     if (expectedTag != closingTag) {
-                        result += "Error at line " + to_string(lineNum) + ": Mismatched tags\n";
+                        error += "Error at line " + to_string(lineNum) + ": Mismatched tags\n";
                         numberOfErrors++;
                     } else {
                         tagStack.pop();
@@ -229,9 +250,9 @@ string verify(const string &xml) {
     
     // check for unclosed tags
     if (!tagStack.empty()) {
-        result += "Error: Unclosed tags found:\n";
+        error += "Error: Unclosed tags found:\n";
         while (!tagStack.empty()) {
-            result += "  - <" + tagStack.top() + ">\n";
+            error += "  - <" + tagStack.top() + ">\n";
             tagStack.pop();
             numberOfErrors++;
         }
@@ -242,9 +263,12 @@ string verify(const string &xml) {
         result = "Valid";
         cout << result << endl;
     } else {
-        result = "Invalid\nTotal Errors: " + to_string(numberOfErrors) + "\n" + result;
-        cout << result << endl;
+        result = "Invalid\nTotal Errors: " + to_string(numberOfErrors) + "\n";
+        cout << result << endl << error << endl;
     }
+
+    verifyResult = result;
+    verifyError = error;
     
     return xml;
 }
@@ -592,14 +616,14 @@ string getIndent(int level)
     return string(level * 4, ' '); // 4 spaces per level
 }
 
-struct XMLNode
+struct JsonXMLNode
 {
     string name;
     string content;
-    vector<XMLNode *> children;
-    XMLNode(string n) : name(n), content("") {} // new way to implement the constructor, it will intialize the values while making the object
+    vector<JsonXMLNode *> children;
+    JsonXMLNode(string n) : name(n), content("") {} // new way to implement the constructor, it will intialize the values while making the object
 
-    ~XMLNode()
+    ~JsonXMLNode()
     {
         for (auto child : children)
         {
@@ -617,10 +641,10 @@ string trim(const string &str)
     return str.substr(first, (last - first + 1));
 }
 
-XMLNode *parseXML(const string &xml)
+JsonXMLNode *parseXML(const string &xml)
 {
-    XMLNode *root = nullptr;
-    stack<XMLNode *> nodeStack;
+    JsonXMLNode *root = nullptr;
+    stack<JsonXMLNode *> nodeStack;
     size_t pos = 0;
     while (pos < xml.length())
     {
@@ -650,7 +674,7 @@ XMLNode *parseXML(const string &xml)
         {
             string tagName = tagContent;
 
-            XMLNode *newNode = new XMLNode(tagName);
+            JsonXMLNode *newNode = new JsonXMLNode(tagName);
 
             if (nodeStack.empty())
             {
@@ -671,7 +695,7 @@ XMLNode *parseXML(const string &xml)
     return root;
 }
 
-void nodeToJSON(XMLNode *node, stringstream &ss, int level)
+void nodeToJSON(JsonXMLNode *node, stringstream &ss, int level)
 {
     if (!node)
         return;
@@ -686,7 +710,7 @@ void nodeToJSON(XMLNode *node, stringstream &ss, int level)
     // Case 2: It's an object (has children)
     ss << "{\n";
 
-    map<string, vector<XMLNode *>> groups;
+    map<string, vector<JsonXMLNode *>> groups;
     vector<string> order;
 
     // Group children by tag name to handle arrays
@@ -743,7 +767,7 @@ void nodeToJSON(XMLNode *node, stringstream &ss, int level)
 
 string json(const string &xml)
 {
-    XMLNode *root = parseXML(xml);
+    JsonXMLNode *root = parseXML(xml);
     if (!root)
         return "{}";
 
@@ -941,26 +965,439 @@ string draw(const string &xml)
 }
 
 string most_active(const string &xml)
-{
-    return "";
+{  
+    struct User {
+        string id;
+        string name;
+        int postCount = 0;  // Changed from followCount to postCount
+    };
+
+    vector<User> users;
+
+    // -------- 1) Read users (id + name) --------
+    int i = 0;
+    while (i < xml.length()) {
+
+        if (xml.substr(i, 6) == "<user>") {
+            i += 6;
+            User u;
+
+            while (xml.substr(i, 7) != "</user>") {
+
+                if (xml.substr(i, 4) == "<id>" && u.id.empty()) {
+                    i += 4;
+                    while (xml.substr(i, 5) != "</id>")
+                        u.id += xml[i++];
+                    i += 5;
+                }
+                else if (xml.substr(i, 6) == "<name>") {
+                    i += 6;
+                    while (xml.substr(i, 7) != "</name>")
+                        u.name += xml[i++];
+                    i += 7;
+                }
+                else if (xml.substr(i, 6) == "<post>") {
+                    // Count posts
+                    u.postCount++;
+                    i += 6;
+                }
+                else {
+                    i++;
+                }
+            }
+
+            users.push_back(u);
+            i += 7; // </user>
+        }
+        else {
+            i++;
+        }
+    }
+
+    // -------- 2) Find max posts --------
+    int maxPosts = -1;
+    for (auto &u : users)
+        if (u.postCount > maxPosts)
+            maxPosts = u.postCount;
+
+    // -------- 3) Build result string --------
+    string result;
+    for (auto &u : users) {
+        if (u.postCount == maxPosts && maxPosts > 0) {
+            if (!result.empty()) result += " | ";
+            result += "ID: " + u.id + ", Name: " + u.name + " (Posts: " + to_string(u.postCount) + ")";
+        }
+    }
+
+    return result;
 }
 
 string most_influencer(const string &xml)
-{
-    return "";
+{    
+    struct User {
+        string id;
+        string name;
+    };
+    
+    vector<User> topUsers;
+    int maxFollowers = -1;
+
+    int i = 0;
+    while (i < xml.length()) {
+        if (xml.substr(i, 6) == "<user>") {
+            i += 6;
+
+            string id = "";
+            string name = "";
+            int followerCount = 0;
+            bool idRead = false;
+            bool nameRead = false;
+
+            while (!(xml.substr(i, 7) == "</user>")) {
+                if (!idRead && xml.substr(i, 4) == "<id>") {
+                    i += 4;
+                    while (!(xml.substr(i, 5) == "</id>")) {
+                        id += xml[i++];
+                    }
+                    i += 5;
+                    idRead = true;
+                } else if (!nameRead && xml.substr(i, 6) == "<name>") {
+                    i += 6;
+                    while (!(xml.substr(i, 7) == "</name>")) {
+                        name += xml[i++];
+                    }
+                    i += 7;
+                    nameRead = true;
+                } else if (xml.substr(i, 10) == "<follower>") {
+                    followerCount++;
+                    i += 10;
+                } else {
+                    i++;
+                }
+            }
+
+            if (followerCount > maxFollowers) {
+                topUsers.clear();
+                topUsers.push_back({id, name});
+                maxFollowers = followerCount;
+            } else if (followerCount == maxFollowers) {
+                topUsers.push_back({id, name});
+            }
+
+            i += 7; // skip </user>
+        } else {
+            i++;
+        }
+    }
+
+    // Convert vector of users to single string
+    string result;
+    for (size_t j = 0; j < topUsers.size(); j++) {
+        result += "ID: " + topUsers[j].id + ", Name: " + topUsers[j].name;
+        if (j != topUsers.size() - 1)
+            result += " | ";  // separator between users
+    }
+
+    return result;
 }
 
 string mutual(const string &xml, const vector<int> &ids)
 {
-    return "";
+    // --------- HANDLE EDGE CASES ---------
+    if (ids.empty()) {
+        return "Error: No user IDs provided.";
+    }
+
+    map<int, vector<int>> followers;
+
+    // --------- PARSE XML ---------
+    size_t pos = 0;
+    while ((pos = xml.find("<user>", pos)) != string::npos) {
+
+        // Find the end of this user block first to ensure we advance properly
+        size_t userEnd = xml.find("</user>", pos);
+        if (userEnd == string::npos) {
+            break;  // No closing tag, exit to avoid infinite loop
+        }
+
+        size_t idStart = xml.find("<id>", pos);
+        size_t idEnd   = xml.find("</id>", pos);
+        
+        // Validate id tags exist and are within this user block
+        if (idStart == string::npos || idEnd == string::npos || idStart > userEnd) {
+            pos = userEnd + 7;  // Move past </user>
+            continue;
+        }
+        
+        idStart += 4;  // Move past <id>
+        int userId = stoi(xml.substr(idStart, idEnd - idStart));
+
+        size_t followersStart = xml.find("<followers>", pos);
+        size_t followersEnd   = xml.find("</followers>", pos);
+
+        // Only process followers if both tags exist and are within this user block
+        if (followersStart != string::npos && followersEnd != string::npos && 
+            followersStart < userEnd && followersEnd < userEnd) {
+            
+            size_t fpos = followersStart;
+            while ((fpos = xml.find("<follower>", fpos)) != string::npos &&
+                   fpos < followersEnd) {
+
+                size_t fStart = fpos + 10;  // Move past <follower>
+                size_t fEnd = xml.find("</follower>", fStart);
+                
+                if (fEnd == string::npos || fEnd > followersEnd) {
+                    break;
+                }
+                
+                // Get the content between <follower> and </follower>
+                string followerContent = xml.substr(fStart, fEnd - fStart);
+                
+                // Check if there's a nested <id> tag or direct content
+                size_t nestedIdStart = followerContent.find("<id>");
+                if (nestedIdStart != string::npos) {
+                    // Nested id format: <follower><id>X</id></follower>
+                    size_t nestedIdEnd = followerContent.find("</id>");
+                    if (nestedIdEnd != string::npos) {
+                        string idStr = followerContent.substr(nestedIdStart + 4, nestedIdEnd - nestedIdStart - 4);
+                        int followerId = stoi(idStr);
+                        followers[userId].push_back(followerId);
+                    }
+                } else {
+                    // Direct content format: <follower>X</follower>
+                    // Trim whitespace
+                    size_t start = followerContent.find_first_not_of(" \t\n\r");
+                    size_t end = followerContent.find_last_not_of(" \t\n\r");
+                    if (start != string::npos && end != string::npos) {
+                        string idStr = followerContent.substr(start, end - start + 1);
+                        int followerId = stoi(idStr);
+                        followers[userId].push_back(followerId);
+                    }
+                }
+
+                fpos = fEnd + 11;  // Move past </follower>
+            }
+        }
+
+        pos = userEnd + 7;  // Move past </user> to next user
+    }
+
+    // --------- HANDLE SINGLE USER CASE ---------
+    if (ids.size() == 1) {
+        int singleId = ids[0];
+        if (followers.find(singleId) == followers.end() || followers[singleId].empty()) {
+            return "User " + to_string(singleId) + " has no followers.";
+        }
+        
+        stringstream out;
+        out << "Followers of user " << singleId << ":\n";
+        for (int u : followers[singleId])
+            out << "User ID: " << u << "\n";
+        return out.str();
+    }
+
+    // --------- FIND MUTUAL FOLLOWERS ---------
+    vector<int> result = followers[ids[0]];
+
+    for (size_t i = 1; i < ids.size(); i++) {
+        vector<int> temp;
+        for (int u : result) {
+            if (find(followers[ids[i]].begin(),
+                     followers[ids[i]].end(),
+                     u) != followers[ids[i]].end()) {
+                temp.push_back(u);
+            }
+        }
+        result = temp;
+    }
+
+    // --------- FORMAT OUTPUT ---------
+    if (result.empty())
+        return "No mutual followers found.";
+
+    stringstream out;
+    out << "Mutual followers between users ";
+    for (size_t i = 0; i < ids.size(); i++) {
+        out << ids[i];
+        if (i < ids.size() - 2)
+            out << ", ";
+        else if (i == ids.size() - 2)
+            out << ", and ";
+    }
+    out << ":\n";
+    for (int u : result)
+        out << "User ID: " << u << "\n";
+
+    return out.str();
 }
 
-string suggest(const string &xml)
+
+string suggest(const string &xml, int userId)
 {
-    return "";
+    Graph followersGraph = buildGraphFromXML(xml);
+    string result;
+
+    Graph followingGraph;
+
+    for (const auto &entry : followersGraph)
+    {
+        int followedUser = entry.first;
+        const vector<int> &followers = entry.second;
+
+        for (int follower : followers)
+        {
+            followingGraph[follower].push_back(followedUser);
+        }
+    }
+
+    if (followingGraph.find(userId) == followingGraph.end())
+    {
+        return result;
+    }
+
+    const vector<int> &myFollowing = followingGraph[userId];
+
+    unordered_map<int, bool> alreadyFollowing;
+    for (int id : myFollowing)
+    {
+        alreadyFollowing[id] = true;
+    }
+    alreadyFollowing[userId] = true; 
+
+    map<int, int> candidateScores;
+
+    for (int friendId : myFollowing)
+    {
+        if (followingGraph.find(friendId) != followingGraph.end())
+        {
+            const vector<int> &friendsFollowing = followingGraph[friendId];
+            for (int candidateId : friendsFollowing)
+            {
+                if (alreadyFollowing.find(candidateId) == alreadyFollowing.end())
+                {
+                    candidateScores[candidateId]++;
+                }
+            }
+        }
+    }
+
+    vector<pair<int, int>> sortedCandidates;
+    for (const auto &entry : candidateScores)
+    {
+        sortedCandidates.push_back(entry);
+    }
+
+    sort(sortedCandidates.begin(), sortedCandidates.end(),
+         [](const pair<int, int> &a, const pair<int, int> &b)
+         {
+             return a.second > b.second; // Higher score first
+         });
+
+    for (const auto &candidate : sortedCandidates)
+    {
+        result += to_string(candidate.first) + "\n";
+    }
+
+    return result;
 }
 
-string search(const string &xml)
-{
-    return "";
+vector<string> searchPostsByWord(const string& xml, const string& word) {
+    vector<string> results;
+
+    const string post_open  = "<post>";
+    const string post_close = "</post>";
+    const string body_open  = "<body>";
+    const string body_close = "</body>";
+
+    size_t pos = 0;
+
+    while (true) {
+        size_t post_start = xml.find(post_open, pos);
+        if (post_start == string::npos) break;
+
+        size_t post_end = xml.find(post_close, post_start);
+        if (post_end == string::npos) break;
+
+        string post_block = xml.substr(
+            post_start,
+            post_end - post_start
+        );
+
+        size_t body_start = post_block.find(body_open);
+        size_t body_end   = post_block.find(body_close);
+
+        if (body_start != string::npos &&
+            body_end   != string::npos &&
+            body_end > body_start) {
+
+            body_start += body_open.length();
+            string body = post_block.substr(
+                body_start,
+                body_end - body_start
+            );
+
+            if (body.find(word) != string::npos) {
+                results.push_back(body);
+            }
+        }
+
+        pos = post_end + post_close.length();
+    }
+
+    return results;
 }
+
+vector<string> searchPostsByTopic(const string& xml, const string& topic) {
+    vector<string> results;
+
+    const string post_open  = "<post>";
+    const string post_close = "</post>";
+    const string body_open  = "<body>";
+    const string body_close = "</body>";
+
+    const string topic_tag =
+        "<topic>" + topic + "</topic>";
+
+    size_t pos = 0;
+
+    while ((pos = xml.find(post_open, pos)) != string::npos) {
+        size_t post_end = xml.find(post_close, pos);
+        if (post_end == string::npos) break;
+
+        string post_block =
+            xml.substr(pos, post_end - pos);
+
+        if (post_block.find(topic_tag) != string::npos) {
+            size_t body_start = post_block.find(body_open);
+            size_t body_end   = post_block.find(body_close);
+
+            if (body_start != string::npos &&
+                body_end   != string::npos) {
+
+                body_start += body_open.length();
+                results.push_back(
+                    post_block.substr(body_start, body_end - body_start)
+                );
+            }
+        }
+
+        pos = post_end + post_close.length();
+    }
+
+    return results;
+}
+
+vector<int> strIDs2int(const string &ids) {
+    vector<int> Ids;
+    stringstream ss(ids);
+    string segment;
+
+    // Use getline to split the string by the comma delimiter
+    while (getline(ss, segment, ',')) {
+        // Convert the string segment to an integer and push it to the vector
+        Ids.push_back(stoi(segment));
+    }
+
+    return Ids;
+}
+
